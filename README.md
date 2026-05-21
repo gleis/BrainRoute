@@ -19,6 +19,9 @@ The first version is intentionally small:
 python3 -m brainpicker.cli route "Refactor this Python module for readability"
 python3 -m brainpicker.cli route "Summarize this private medical note" --profile private
 python3 -m brainpicker.cli ask "Say hello in one sentence" --profile cheap --dry-run
+python3 -m brainpicker.cli models
+python3 -m brainpicker.cli health
+python3 -m brainpicker.cli eval
 ```
 
 Start the local test app:
@@ -79,6 +82,17 @@ The local UI lets you:
 - optionally execute the selected model
 - inspect recent telemetry events
 - check whether configured providers look available
+- record quick good/bad feedback on a routing decision
+
+## Evaluation
+
+BrainPicker includes a tiny routing eval set in [config/evals.yaml](/Users/gleis/Documents/BrainPicker/config/evals.yaml). Run it after changing model scores or routing weights:
+
+```bash
+python3 -m brainpicker.cli eval
+```
+
+This does not call any model providers. It checks whether the router chooses the expected model for representative prompts.
 
 ## Where This Goes Next
 

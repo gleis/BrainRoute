@@ -1,5 +1,6 @@
 const state = {
   config: null,
+  lastDecision: null,
 };
 
 const $ = (id) => document.getElementById(id);
@@ -42,6 +43,7 @@ async function routePrompt(event) {
       method: "POST",
       body: JSON.stringify(payload),
     });
+    state.lastDecision = data.decision;
     renderDecision(data.decision);
     $("output").textContent = data.executed
       ? data.output || data.error || "No output returned."
@@ -52,6 +54,24 @@ async function routePrompt(event) {
     $("status").textContent = "Error";
     $("output").textContent = error.message;
   }
+}
+
+async function sendFeedback(rating) {
+  if (!state.lastDecision) {
+    $("status").textContent = "Route a prompt first";
+    return;
+  }
+  await request("/api/feedback", {
+    method: "POST",
+    body: JSON.stringify({
+      rating,
+      model: state.lastDecision.recommended_model,
+      profile: $("profile").value,
+      task_type: state.lastDecision.task_type,
+    }),
+  });
+  $("status").textContent = rating === "good" ? "Feedback saved" : "Feedback saved";
+  await loadTelemetry();
 }
 
 function renderDecision(decision) {
@@ -105,10 +125,11 @@ async function boot() {
   $("promptForm").addEventListener("submit", routePrompt);
   $("refreshHealth").addEventListener("click", loadHealth);
   $("refreshTelemetry").addEventListener("click", loadTelemetry);
+  $("goodFeedback").addEventListener("click", () => sendFeedback("good"));
+  $("badFeedback").addEventListener("click", () => sendFeedback("bad"));
 }
 
 boot().catch((error) => {
   $("status").textContent = "Startup error";
   $("output").textContent = error.message;
 });
-

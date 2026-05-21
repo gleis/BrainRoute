@@ -5,9 +5,10 @@ import json
 import sys
 
 from .config import load_config
-from .providers import generate
+from .evals import run_evals
+from .providers import generate, provider_health
 from .router import find_model, route
-from .telemetry import write_event
+from .telemetry import read_events, write_event
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -25,6 +26,15 @@ def main(argv: list[str] | None = None) -> int:
     ask_parser.add_argument("--model", help="Force a specific model id")
     ask_parser.add_argument("--execute", action="store_true")
     ask_parser.add_argument("--dry-run", action="store_true")
+
+    subcommands.add_parser("models", help="List configured models")
+    subcommands.add_parser("health", help="Check configured provider availability")
+
+    telemetry_parser = subcommands.add_parser("telemetry", help="Show recent telemetry events")
+    telemetry_parser.add_argument("--limit", type=int, default=10)
+
+    eval_parser = subcommands.add_parser("eval", help="Run routing evals")
+    eval_parser.add_argument("--json", action="store_true")
 
     args = parser.parse_args(argv)
     config = load_config()
@@ -64,6 +74,35 @@ def main(argv: list[str] | None = None) -> int:
         print(output)
         return 0
 
+    if args.command == "models":
+        for model in config.models:
+            enabled = "enabled" if model.get("enabled", True) else "disabled"
+            local = "local" if model.get("local") else "cloud"
+            print(f"{model['id']:<18} {model.get('provider'):<8} {local:<5} {enabled:<8} {model.get('name')}")
+        return 0
+
+    if args.command == "health":
+        for item in provider_health(config.models):
+            status = "ok" if item["ok"] else "not ok"
+            print(f"{item['id']:<18} {status:<6} {item['detail']}")
+        return 0
+
+    if args.command == "telemetry":
+        for event in read_events(limit=args.limit):
+            label = event.get("selected_model") or event.get("decision", {}).get("recommended_model") or ""
+            print(f"{event.get('created_at', '')} {event.get('event', 'event'):<8} {label}")
+        return 0
+
+    if args.command == "eval":
+        results = run_evals(config)
+        if args.json:
+            print(json.dumps([result.__dict__ for result in results], indent=2))
+        else:
+            for result in results:
+                status = "PASS" if result.passed else "FAIL"
+                print(f"{status} {result.name}: expected {result.expected_model}, got {result.actual_model}")
+        return 0 if all(result.passed for result in results) else 1
+
     return 1
 
 
@@ -82,4 +121,3 @@ def _print_decision(decision: dict) -> None:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

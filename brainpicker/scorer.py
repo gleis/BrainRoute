@@ -56,6 +56,8 @@ def _score_model(model: dict[str, Any], profile: dict[str, float], task: TaskPro
     if task.complexity == "high":
         task_fit += float(model.get("quality_score", 0)) * 0.05
         reasons.append("complex task favors quality")
+        if float(model.get("quality_score", 0)) >= 0.9:
+            task_fit += 0.25
+            reasons.append("premium quality bonus")
 
     return ScoredModel(model=model, score=round(base + task_fit, 4), reasons=tuple(reasons))
-

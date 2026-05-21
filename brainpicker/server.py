@@ -83,6 +83,18 @@ class BrainPickerHandler(BaseHTTPRequestHandler):
             self._json(response, status=200 if not response.get("error") else 502)
             return
 
+        if self.path == "/api/feedback":
+            payload = self._read_json()
+            write_event({
+                "event": "feedback",
+                "rating": payload.get("rating"),
+                "selected_model": payload.get("model"),
+                "profile": payload.get("profile"),
+                "task_type": payload.get("task_type"),
+            })
+            self._json({"ok": True})
+            return
+
         self._json({"error": "Not found"}, status=404)
 
     def log_message(self, format: str, *args: Any) -> None:
@@ -150,4 +162,3 @@ def main(argv: list[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
