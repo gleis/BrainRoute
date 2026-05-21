@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BrainPicker</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Local model routing lab</p>
+          <h1>BrainPicker</h1>
+        </div>
+        <button id="refreshHealth" type="button">Check Providers</button>
+      </header>
+
+      <section class="workspace">
+        <form id="promptForm" class="composer">
+          <label for="prompt">Prompt</label>
+          <textarea id="prompt" name="prompt" rows="9">Refactor this Python function and explain the tradeoffs.</textarea>
+          <div class="controls">
+            <label>
+              Profile
+              <select id="profile" name="profile"></select>
+            </label>
+            <label>
+              Forced model
+              <select id="model" name="model">
+                <option value="">Auto</option>
+              </select>
+            </label>
+            <label class="checkbox">
+              <input id="execute" name="execute" type="checkbox">
+              Execute provider call
+            </label>
+            <button type="submit">Route Prompt</button>
+          </div>
+        </form>
+
+        <section class="decision" aria-live="polite">
+          <div class="panel-head">
+            <h2>Decision</h2>
+            <span id="status">Ready</span>
+          </div>
+          <div id="summary" class="summary"></div>
+          <div id="ranking" class="ranking"></div>
+          <pre id="output" class="output"></pre>
+        </section>
+      </section>
+
+      <section class="lower">
+        <div>
+          <div class="panel-head">
+            <h2>Provider Health</h2>
+          </div>
+          <div id="health" class="list"></div>
+        </div>
+        <div>
+          <div class="panel-head">
+            <h2>Recent Telemetry</h2>
+            <button id="refreshTelemetry" type="button">Refresh</button>
+          </div>
+          <div id="telemetry" class="list"></div>
+        </div>
+      </section>
+    </main>
+    <script src="/app.js"></script>
+  </body>
+</html>
+

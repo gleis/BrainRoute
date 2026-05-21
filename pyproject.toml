@@ -8,7 +8,7 @@ readme = "README.md"
 
 [project.scripts]
 brainpicker = "brainpicker.cli:main"
+brainpicker-server = "brainpicker.server:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-

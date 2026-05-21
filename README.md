@@ -9,6 +9,7 @@ The first version is intentionally small:
 - heuristic task classification
 - deterministic model scoring
 - dry-run CLI for seeing routing decisions
+- local browser UI for testing prompts and profiles
 - opt-in execution through local Ollama or OpenAI Responses API
 - JSONL telemetry for route decisions
 
@@ -19,6 +20,14 @@ python3 -m brainpicker.cli route "Refactor this Python module for readability"
 python3 -m brainpicker.cli route "Summarize this private medical note" --profile private
 python3 -m brainpicker.cli ask "Say hello in one sentence" --profile cheap --dry-run
 ```
+
+Start the local test app:
+
+```bash
+python3 -m brainpicker.server
+```
+
+Then open [http://127.0.0.1:8765](http://127.0.0.1:8765).
 
 Run tests:
 
@@ -59,6 +68,17 @@ python3 -m brainpicker.cli ask "Write a short project tagline" --model gpt-5.4-m
 ```
 
 The OpenAI adapter uses the Responses API (`POST /v1/responses`), which is the current primary text generation interface in OpenAI's API reference as of this scaffold.
+
+## Web UI
+
+The local UI lets you:
+
+- enter a prompt
+- choose a routing profile
+- see the ranked model decision
+- optionally execute the selected model
+- inspect recent telemetry events
+- check whether configured providers look available
 
 ## Where This Goes Next
 
