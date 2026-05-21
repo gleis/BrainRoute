@@ -41,7 +41,7 @@ def _check_ollama(model: dict[str, Any], timeout: int) -> dict[str, Any]:
             "id": model.get("id"),
             "provider": model.get("provider"),
             "ok": False,
-            "detail": str(exc),
+            "detail": str(exc) or exc.__class__.__name__,
         }
     wanted = model.get("model")
     names = {item.get("name") for item in data.get("models", [])}
@@ -51,4 +51,3 @@ def _check_ollama(model: dict[str, Any], timeout: int) -> dict[str, Any]:
         "ok": wanted in names,
         "detail": f"{wanted} available" if wanted in names else f"{wanted} not found in Ollama",
     }
-
