@@ -1,0 +1,31 @@
+default_profile: balanced
+
+profiles:
+  balanced:
+    quality: 0.35
+    speed: 0.25
+    cost: 0.25
+    privacy: 0.15
+    task_fit: 0.20
+
+  cheap:
+    quality: 0.20
+    speed: 0.20
+    cost: 0.50
+    privacy: 0.10
+    task_fit: 0.15
+
+  urgent:
+    quality: 0.25
+    speed: 0.55
+    cost: 0.15
+    privacy: 0.05
+    task_fit: 0.15
+
+  private:
+    quality: 0.20
+    speed: 0.10
+    cost: 0.05
+    privacy: 0.65
+    task_fit: 0.20
+

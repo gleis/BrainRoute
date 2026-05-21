@@ -1,0 +1,14 @@
+[project]
+name = "brainpicker"
+version = "0.1.0"
+description = "A local-first intelligent model router for choosing the best model per task."
+requires-python = ">=3.11"
+authors = [{ name = "BrainPicker" }]
+readme = "README.md"
+
+[project.scripts]
+brainpicker = "brainpicker.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+

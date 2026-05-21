@@ -1,0 +1,60 @@
+models:
+  - id: local-qwen3
+    name: Qwen3 Local
+    provider: ollama
+    model: qwen3:8b
+    endpoint: http://localhost:11434/api/chat
+    local: true
+    enabled: true
+    strengths:
+      - coding
+      - reasoning
+      - summarization
+      - private
+    weaknesses:
+      - legal
+      - medical
+    privacy_score: 1.0
+    speed_score: 0.80
+    quality_score: 0.65
+    cost_score: 1.0
+    max_context: 32768
+
+  - id: gpt-5.4-mini
+    name: GPT-5.4 Mini
+    provider: openai
+    model: gpt-5.4-mini
+    local: false
+    enabled: true
+    strengths:
+      - general
+      - coding
+      - tool_use
+      - writing
+      - summarization
+    weaknesses: []
+    privacy_score: 0.40
+    speed_score: 0.85
+    quality_score: 0.85
+    cost_score: 0.65
+    max_context: 128000
+
+  - id: premium-reasoner
+    name: Premium Reasoner
+    provider: external
+    model: premium-reasoner
+    local: false
+    enabled: true
+    strengths:
+      - reasoning
+      - coding
+      - legal
+      - long_context
+    weaknesses:
+      - cheap
+    privacy_score: 0.35
+    speed_score: 0.55
+    quality_score: 0.95
+    cost_score: 0.25
+    max_context: 200000
+
