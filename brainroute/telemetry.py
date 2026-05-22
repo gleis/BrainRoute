@@ -1,12 +1,18 @@
 from __future__ import annotations
 
-import json
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from .store import read_events as read_db_events
+from .store import write_event as write_db_event
+
 
 def write_event(event: dict[str, Any], path: str | Path = "logs/telemetry.jsonl") -> None:
+    write_db_event(event)
+    # Keep the JSONL stream for simple local tailing during development.
+    import json
+    from datetime import datetime, timezone
+
     output = Path(path)
     output.parent.mkdir(parents=True, exist_ok=True)
     payload = {"created_at": datetime.now(timezone.utc).isoformat(), **event}
@@ -15,6 +21,11 @@ def write_event(event: dict[str, Any], path: str | Path = "logs/telemetry.jsonl"
 
 
 def read_events(path: str | Path = "logs/telemetry.jsonl", limit: int = 50) -> list[dict[str, Any]]:
+    db_events = read_db_events(limit=limit)
+    if db_events:
+        return db_events
+    import json
+
     source = Path(path)
     if not source.exists():
         return []

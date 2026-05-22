@@ -7,6 +7,7 @@ from .classifier import TaskProfile, classify, classify_with_model
 from .config import RouterConfig
 from .scorer import ScoredModel, score_models
 from .settings import load_settings
+from .policy import PolicyResult, apply_policy
 
 
 @dataclass(frozen=True)
@@ -16,6 +17,7 @@ class RouteDecision:
     fallback: ScoredModel | None
     ranked: tuple[ScoredModel, ...]
     profile_name: str
+    policy: PolicyResult
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -41,13 +43,19 @@ class RouteDecision:
                 }
                 for item in self.ranked
             ],
+            "policy": {
+                "rejected": list(self.policy.rejected),
+                "monthly_spend_usd": self.policy.monthly_spend_usd,
+                "settings": self.policy.settings,
+            },
         }
 
 
 def route(prompt: str, config: RouterConfig, profile_name: str | None = None) -> RouteDecision:
     resolved_profile_name = profile_name or config.default_profile
     task = _classify(prompt, config)
-    ranked = tuple(score_models(config.models, config.profile(resolved_profile_name), task))
+    policy = apply_policy(config.models, task, prompt)
+    ranked = tuple(score_models(list(policy.allowed), config.profile(resolved_profile_name), task))
     if not ranked:
         raise ValueError("No enabled models are available")
     fallback = ranked[1] if len(ranked) > 1 else None
@@ -57,6 +65,7 @@ def route(prompt: str, config: RouterConfig, profile_name: str | None = None) ->
         fallback=fallback,
         ranked=ranked,
         profile_name=resolved_profile_name,
+        policy=policy,
     )
 
 

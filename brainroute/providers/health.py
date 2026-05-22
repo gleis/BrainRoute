@@ -22,6 +22,13 @@ def _check_model(model: dict[str, Any], timeout: int) -> dict[str, Any]:
             "ok": bool(os.environ.get("OPENAI_API_KEY")),
             "detail": "OPENAI_API_KEY set" if os.environ.get("OPENAI_API_KEY") else "OPENAI_API_KEY missing",
         }
+    if provider == "openrouter":
+        return {
+            "id": model.get("id"),
+            "provider": provider,
+            "ok": bool(os.environ.get("OPENROUTER_API_KEY")),
+            "detail": "OPENROUTER_API_KEY set" if os.environ.get("OPENROUTER_API_KEY") else "OPENROUTER_API_KEY missing",
+        }
     return {
         "id": model.get("id"),
         "provider": provider,

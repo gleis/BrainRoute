@@ -26,6 +26,21 @@ class ServerTests(unittest.TestCase):
         self.assertIn("balanced", data["profiles"])
         self.assertGreaterEqual(len(data["models"]), 3)
 
+    def test_dashboard_endpoint(self):
+        with urllib.request.urlopen(f"{self.base_url}/api/dashboard") as response:
+            data = json.loads(response.read().decode("utf-8"))
+        self.assertIn("models", data)
+
+    def test_v1_models_endpoint(self):
+        with urllib.request.urlopen(f"{self.base_url}/v1/models") as response:
+            data = json.loads(response.read().decode("utf-8"))
+        self.assertEqual(data["object"], "list")
+
+    def test_evals_endpoint(self):
+        with urllib.request.urlopen(f"{self.base_url}/api/evals") as response:
+            data = json.loads(response.read().decode("utf-8"))
+        self.assertTrue(data["results"])
+
     def test_ask_dry_run_endpoint(self):
         payload = json.dumps({
             "prompt": "Summarize this confidential patient note",

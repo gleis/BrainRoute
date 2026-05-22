@@ -36,6 +36,8 @@
               Execute provider call
             </label>
             <button type="submit">Route Prompt</button>
+            <button id="compare" class="secondary" type="button">Compare</button>
+            <button id="stop" class="secondary" type="button">Stop</button>
           </div>
         </form>
 
@@ -51,7 +53,15 @@
           </div>
           <div id="ranking" class="ranking"></div>
           <pre id="output" class="output"></pre>
+          <div id="compareResult" class="compare"></div>
         </section>
+      </section>
+      <section class="chat">
+        <div class="panel-head">
+          <h2>Conversation</h2>
+          <button id="newChat" type="button">New Chat</button>
+        </div>
+        <div id="messages" class="messages"></div>
       </section>
 
       <section class="lower">
@@ -67,6 +77,7 @@
             <button id="refreshTelemetry" type="button">Refresh</button>
           </div>
           <div id="telemetry" class="list"></div>
+          <div id="dashboard" class="dashboard"></div>
         </div>
       </section>
       <section class="models">
@@ -87,6 +98,21 @@
           </label>
           <button id="saveClassifier" type="button">Save Router</button>
         </div>
+        <div class="policy">
+          <label class="checkbox"><input id="preferLocal" type="checkbox"> Prefer local routes</label>
+          <label class="checkbox"><input id="allowCloud" type="checkbox"> Allow cloud</label>
+          <label class="checkbox"><input id="allowPrivateCloud" type="checkbox"> Allow private prompts in cloud</label>
+          <label>Max request cost <input id="requestBudget" type="number" min="0" step="0.01"></label>
+          <label>Monthly budget <input id="monthlyBudget" type="number" min="0" step="1"></label>
+          <button id="savePolicy" type="button">Save Policy</button>
+        </div>
+      </section>
+      <section class="evals">
+        <div class="panel-head">
+          <h2>Routing Evals</h2>
+          <button id="runEvals" type="button">Run Evals</button>
+        </div>
+        <div id="evalResults" class="list"></div>
       </section>
     </main>
     <script src="/app.js"></script>

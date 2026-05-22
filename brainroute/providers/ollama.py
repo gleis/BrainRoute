@@ -28,6 +28,32 @@ def call_ollama_json(
     return json.loads(content)
 
 
+def stream_ollama(model: dict[str, Any], prompt: str, timeout: int = 60):
+    endpoint = str(model.get("endpoint", "http://localhost:11434/api/chat"))
+    payload = {
+        "model": model.get("model", model.get("id")),
+        "messages": [{"role": "user", "content": prompt}],
+        "stream": True,
+    }
+    request = urllib.request.Request(
+        endpoint,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            for line in response:
+                if not line.strip():
+                    continue
+                data = json.loads(line.decode("utf-8"))
+                chunk = data.get("message", {}).get("content", "")
+                if chunk:
+                    yield chunk
+    except (urllib.error.URLError, json.JSONDecodeError) as exc:
+        raise RuntimeError(f"Ollama stream failed: {exc}") from exc
+
+
 def _chat(
     model: dict[str, Any],
     prompt: str,

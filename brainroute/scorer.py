@@ -34,6 +34,9 @@ def _score_model(model: dict[str, Any], profile: dict[str, float], task: TaskPro
         + float(model.get("cost_score", 0)) * profile.get("cost", 0)
         + float(model.get("privacy_score", 0)) * profile.get("privacy", 0)
     )
+    if model.get("policy_score_bonus"):
+        base += float(model["policy_score_bonus"])
+        reasons.append("policy prefers local")
 
     strengths = set(model.get("strengths", []))
     weaknesses = set(model.get("weaknesses", []))

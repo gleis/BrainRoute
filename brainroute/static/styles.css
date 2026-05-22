@@ -99,6 +99,7 @@ h2 {
 
 .composer,
 .decision,
+.chat,
 .lower > div,
 .models {
   border: 1px solid var(--line);
@@ -107,8 +108,51 @@ h2 {
   padding: 18px;
 }
 
-.models {
+.chat {
   margin-top: 18px;
+}
+
+.messages {
+  display: grid;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.message {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  max-width: 88%;
+  padding: 12px;
+  white-space: pre-wrap;
+}
+
+.message.user {
+  background: #edf5f1;
+  justify-self: end;
+}
+
+.message.assistant {
+  background: #fff;
+}
+
+.dashboard {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 8px;
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
+.models,
+.evals {
+  margin-top: 18px;
+}
+
+.evals {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  padding: 18px;
 }
 
 .model-grid {
@@ -145,6 +189,35 @@ h2 {
   grid-template-columns: minmax(240px, 1fr) minmax(220px, 1fr) auto;
   margin-top: 14px;
   padding-top: 14px;
+}
+
+.policy {
+  border-top: 1px solid var(--line);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  margin-top: 14px;
+  padding-top: 14px;
+}
+
+.policy input[type="number"] {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 0.55rem;
+}
+
+.compare {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  margin-top: 14px;
+}
+
+.compare pre {
+  margin: 8px 0 0;
+  max-height: 260px;
+  overflow: auto;
+  white-space: pre-wrap;
 }
 
 label {
