@@ -76,6 +76,17 @@
         </div>
         <div id="catalogSources" class="sources"></div>
         <div id="models" class="model-grid"></div>
+        <div class="classifier">
+          <label class="checkbox">
+            <input id="classifierEnabled" type="checkbox">
+            Use local router model classifier
+          </label>
+          <label>
+            Router model
+            <select id="classifierModel"></select>
+          </label>
+          <button id="saveClassifier" type="button">Save Router</button>
+        </div>
       </section>
     </main>
     <script src="/app.js"></script>

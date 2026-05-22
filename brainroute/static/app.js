@@ -27,6 +27,7 @@ async function loadConfig() {
     .map((model) => `<option value="${model.id}">${model.name} (${model.provider})</option>`)
     .join("");
   renderModels(state.config.models);
+  renderClassifier();
 }
 
 async function routePrompt(event) {
@@ -80,6 +81,7 @@ function renderDecision(decision) {
     ["Recommended", decision.recommended_model],
     ["Fallback", decision.fallback_model || "None"],
     ["Task", `${decision.task_type} / ${decision.complexity}`],
+    ["Classifier", `${decision.classifier} / ${Math.round((decision.confidence || 0) * 100)}%`],
     ["Reason", decision.reason],
   ].map(([label, value]) => `<div class="metric"><strong>${label}</strong><span>${value}</span></div>`).join("");
 
@@ -150,6 +152,29 @@ async function discoverCatalog() {
   await loadConfig();
 }
 
+function renderClassifier() {
+  const classifier = state.config.settings.classifier;
+  const localModels = state.config.models.filter((model) => model.provider === "ollama");
+  $("classifierEnabled").checked = classifier.enabled;
+  $("classifierModel").innerHTML = `<option value="">Select local model</option>` + localModels
+    .map((model) => `<option value="${model.id}" ${model.id === classifier.model_id ? "selected" : ""}>${model.name}</option>`)
+    .join("");
+}
+
+async function saveClassifier() {
+  await request("/api/settings", {
+    method: "POST",
+    body: JSON.stringify({
+      classifier: {
+        enabled: $("classifierEnabled").checked,
+        model_id: $("classifierModel").value,
+      },
+    }),
+  });
+  $("status").textContent = "Router classifier saved";
+  await loadConfig();
+}
+
 async function boot() {
   await loadConfig();
   await loadHealth();
@@ -158,6 +183,7 @@ async function boot() {
   $("refreshHealth").addEventListener("click", loadHealth);
   $("refreshTelemetry").addEventListener("click", loadTelemetry);
   $("refreshModels").addEventListener("click", discoverCatalog);
+  $("saveClassifier").addEventListener("click", saveClassifier);
   $("goodFeedback").addEventListener("click", () => sendFeedback("good"));
   $("badFeedback").addEventListener("click", () => sendFeedback("bad"));
 }
