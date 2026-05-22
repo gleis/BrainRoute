@@ -99,11 +99,42 @@ h2 {
 
 .composer,
 .decision,
-.lower > div {
+.lower > div,
+.models {
   border: 1px solid var(--line);
   border-radius: 8px;
   background: var(--panel);
   padding: 18px;
+}
+
+.models {
+  margin-top: 18px;
+}
+
+.model-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.model {
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+}
+
+.model label {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.sources {
+  color: var(--muted);
+  margin-top: 10px;
 }
 
 label {

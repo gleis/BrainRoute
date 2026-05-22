@@ -26,6 +26,7 @@ async function loadConfig() {
     .filter((model) => model.enabled)
     .map((model) => `<option value="${model.id}">${model.name} (${model.provider})</option>`)
     .join("");
+  renderModels(state.config.models);
 }
 
 async function routePrompt(event) {
@@ -118,6 +119,37 @@ async function loadTelemetry() {
     : `<div class="row"><span>No telemetry yet.</span></div>`;
 }
 
+function renderModels(models) {
+  $("models").innerHTML = models.map((model) => `
+    <article class="model">
+      <strong>${model.name}</strong>
+      <span>${model.provider} / ${model.model}</span>
+      <span>${model.local ? "local" : "external"}${model.discovered ? " / discovered" : ""}</span>
+      <label>Route with model
+        <input data-model-id="${model.id}" type="checkbox" ${model.enabled ? "checked" : ""}>
+      </label>
+    </article>
+  `).join("");
+  $("models").querySelectorAll("input[data-model-id]").forEach((input) => {
+    input.addEventListener("change", () => toggleModel(input.dataset.modelId, input.checked));
+  });
+}
+
+async function toggleModel(id, enabled) {
+  await request("/api/models", { method: "POST", body: JSON.stringify({ id, enabled }) });
+  $("status").textContent = `${enabled ? "Enabled" : "Disabled"} ${id}`;
+  await loadConfig();
+}
+
+async function discoverCatalog() {
+  $("catalogSources").textContent = "Refreshing model sources...";
+  const catalog = await request("/api/catalog");
+  $("catalogSources").textContent = catalog.sources
+    .map((source) => `${source.id}: ${source.ok ? `${source.count} models` : source.detail}`)
+    .join(" / ");
+  await loadConfig();
+}
+
 async function boot() {
   await loadConfig();
   await loadHealth();
@@ -125,6 +157,7 @@ async function boot() {
   $("promptForm").addEventListener("submit", routePrompt);
   $("refreshHealth").addEventListener("click", loadHealth);
   $("refreshTelemetry").addEventListener("click", loadTelemetry);
+  $("refreshModels").addEventListener("click", discoverCatalog);
   $("goodFeedback").addEventListener("click", () => sendFeedback("good"));
   $("badFeedback").addEventListener("click", () => sendFeedback("bad"));
 }

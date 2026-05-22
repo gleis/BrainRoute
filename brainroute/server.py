@@ -7,9 +7,11 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any
 
+from .catalog import discover_models
 from .config import load_config
 from .providers import ProviderError, generate, provider_health
 from .router import find_model, route
+from .settings import load_settings, save_settings, update_model
 from .telemetry import read_events, write_event
 
 
@@ -21,15 +23,19 @@ class BrainRouteHandler(BaseHTTPRequestHandler):
 
     def do_GET(self) -> None:
         if self.path == "/api/config":
-            config = load_config()
+            config = load_config(discover=True)
             self._json({
                 "profiles": sorted(config.profiles),
                 "default_profile": config.default_profile,
                 "models": [_public_model(model) for model in config.models],
+                "settings": load_settings(),
             })
             return
+        if self.path == "/api/catalog":
+            self._json(discover_models())
+            return
         if self.path == "/api/health":
-            config = load_config()
+            config = load_config(discover=True)
             self._json({"providers": provider_health(config.models)})
             return
         if self.path.startswith("/api/telemetry"):
@@ -40,7 +46,7 @@ class BrainRouteHandler(BaseHTTPRequestHandler):
     def do_POST(self) -> None:
         if self.path == "/api/route":
             payload = self._read_json()
-            decision = route(str(payload.get("prompt", "")), load_config(), profile_name=payload.get("profile"))
+            decision = route(str(payload.get("prompt", "")), load_config(discover=True), profile_name=payload.get("profile"))
             event = {"event": "route", "profile": decision.profile_name, "decision": decision.as_dict()}
             write_event(event)
             self._json(decision.as_dict())
@@ -49,7 +55,7 @@ class BrainRouteHandler(BaseHTTPRequestHandler):
         if self.path == "/api/ask":
             payload = self._read_json()
             prompt = str(payload.get("prompt", ""))
-            config = load_config()
+            config = load_config(discover=True)
             decision = route(prompt, config, profile_name=payload.get("profile"))
             model = find_model(config, payload["model"]) if payload.get("model") else decision.selected.model
             execute = bool(payload.get("execute"))
@@ -95,6 +101,20 @@ class BrainRouteHandler(BaseHTTPRequestHandler):
             self._json({"ok": True})
             return
 
+        if self.path == "/api/models":
+            payload = self._read_json()
+            model_id = str(payload.get("id", ""))
+            if not model_id:
+                self._json({"error": "Model id is required"}, status=400)
+                return
+            settings = update_model(model_id, {"enabled": bool(payload.get("enabled"))})
+            self._json({"ok": True, "settings": settings})
+            return
+
+        if self.path == "/api/settings":
+            self._json({"ok": True, "settings": save_settings(self._read_json())})
+            return
+
         self._json({"error": "Not found"}, status=404)
 
     def log_message(self, format: str, *args: Any) -> None:
@@ -138,6 +158,7 @@ def _public_model(model: dict[str, Any]) -> dict[str, Any]:
         "model": model.get("model"),
         "local": model.get("local"),
         "enabled": model.get("enabled"),
+        "discovered": model.get("discovered", False),
         "strengths": model.get("strengths", []),
         "quality_score": model.get("quality_score"),
         "speed_score": model.get("speed_score"),
