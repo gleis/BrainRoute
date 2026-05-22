@@ -1,17 +1,18 @@
 # BrainRoute - LLM Router
 
-BrainRoute is an early MVP for an intelligent model router: it looks at a request, scores available local and cloud models against your routing profile, and chooses the best model for the job.
+BrainRoute is a local-first intelligent model router: it classifies a request, applies routing policy, scores enabled local and cloud models, executes the selected provider, records telemetry, and exposes a browser UI plus gateway APIs.
 
-The first version is intentionally small:
+The current build includes:
 
-- editable YAML model registry
+- editable YAML seed registry plus runtime Ollama and optional OpenRouter discovery
 - weighted routing profiles for balanced, cheap, urgent, and private modes
-- heuristic task classification
-- deterministic model scoring
-- dry-run CLI for seeing routing decisions
-- local browser UI for testing prompts and profiles
-- opt-in execution through local Ollama or OpenAI Responses API
-- JSONL telemetry for route decisions
+- heuristic classification with opt-in structured local router-model classification
+- deterministic scoring, privacy filtering, local preference, and budget controls
+- dry-run and execution CLI commands
+- local browser UI for chat streaming, provider health, model enablement, compare, evals, policy, and feedback
+- execution through Ollama, OpenAI Responses API, and enabled OpenRouter models
+- SQLite telemetry, conversation storage, run metrics, and a JSONL development tail
+- OpenAI-compatible gateway endpoints
 
 ## Quick Start
 
@@ -83,6 +84,41 @@ The local UI lets you:
 - inspect recent telemetry events
 - check whether configured providers look available
 - record quick good/bad feedback on a routing decision
+- stream local provider output into a persisted conversation
+- discover and enable installed Ollama models
+- optionally discover OpenRouter models after enabling its catalog source
+- choose a local structured classifier model
+- run evals and compare top candidate routes
+- set privacy and budget routing policy
+
+Runtime settings are written to `data/settings.json` and SQLite state is stored in `data/brainroute.sqlite`. The `data/` directory is intentionally git-ignored.
+
+## Gateway API
+
+BrainRoute serves:
+
+- `GET /healthz`
+- `GET /api/config`, `/api/health`, `/api/catalog`, `/api/evals`, `/api/dashboard`
+- `POST /api/route`, `/api/ask`, `/api/chat/stream`, `/api/compare`
+- `GET /v1/models`
+- `POST /v1/chat/completions`
+
+Set `BRAINROUTE_API_KEY` to require `Authorization: Bearer ...` on the `/v1/*` gateway endpoints.
+
+Example:
+
+```bash
+curl http://127.0.0.1:8765/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -d '{"model":"brainroute-auto","messages":[{"role":"user","content":"Write a release note."}]}'
+```
+
+For cloud execution set provider keys in the environment:
+
+```bash
+export OPENAI_API_KEY="..."
+export OPENROUTER_API_KEY="..."
+```
 
 ## Evaluation
 
@@ -94,13 +130,6 @@ python3 -m brainroute.cli eval
 
 This does not call any model providers. It checks whether the router chooses the expected model for representative prompts.
 
-## Where This Goes Next
+## Production Notes
 
-The useful product is not just a model picker. It becomes valuable when it learns from real usage:
-
-- latency and error tracking per provider
-- estimated cost per request
-- user feedback on response quality
-- fallback rules when a model fails
-- a small classifier model for richer task detection
-- a local dashboard for model performance and spend
+BrainRoute has no third-party Python runtime dependency today. Run it behind a host firewall or a reverse proxy when binding beyond loopback, use `BRAINROUTE_API_KEY` for client access, set explicit routing policy before enabling external models, and keep provider credentials in the process environment rather than config files.

@@ -48,7 +48,7 @@ def _check_ollama(model: dict[str, Any], timeout: int) -> dict[str, Any]:
             "id": model.get("id"),
             "provider": model.get("provider"),
             "ok": False,
-            "detail": str(exc) or exc.__class__.__name__,
+            "detail": f"Ollama unavailable: {str(exc) or exc.__class__.__name__}",
         }
     wanted = model.get("model")
     names = {

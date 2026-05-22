@@ -6,6 +6,11 @@ const state = {
 };
 
 const $ = (id) => document.getElementById(id);
+const escapeHtml = (value) => String(value ?? "")
+  .replaceAll("&", "&amp;")
+  .replaceAll("<", "&lt;")
+  .replaceAll(">", "&gt;")
+  .replaceAll('"', "&quot;");
 
 async function request(path, options = {}) {
   const response = await fetch(path, {
@@ -22,15 +27,16 @@ async function request(path, options = {}) {
 async function loadConfig() {
   state.config = await request("/api/config");
   $("profile").innerHTML = state.config.profiles
-    .map((name) => `<option value="${name}" ${name === state.config.default_profile ? "selected" : ""}>${name}</option>`)
+    .map((name) => `<option value="${escapeHtml(name)}" ${name === state.config.default_profile ? "selected" : ""}>${escapeHtml(name)}</option>`)
     .join("");
   $("model").innerHTML = `<option value="">Auto</option>` + state.config.models
     .filter((model) => model.enabled)
-    .map((model) => `<option value="${model.id}">${model.name} (${model.provider})</option>`)
+    .map((model) => `<option value="${escapeHtml(model.id)}">${escapeHtml(model.name)} (${escapeHtml(model.provider)})</option>`)
     .join("");
   renderModels(state.config.models);
   renderClassifier();
   renderPolicy();
+  $("openrouterCatalog").checked = state.config.settings.catalog.openrouter_enabled;
 }
 
 async function routePrompt(event) {
@@ -93,21 +99,21 @@ function renderDecision(decision) {
     ["Task", `${decision.task_type} / ${decision.complexity}`],
     ["Classifier", `${decision.classifier} / ${Math.round((decision.confidence || 0) * 100)}%`],
     ["Reason", decision.reason],
-  ].map(([label, value]) => `<div class="metric"><strong>${label}</strong><span>${value}</span></div>`).join("");
+  ].map(([label, value]) => `<div class="metric"><strong>${escapeHtml(label)}</strong><span>${escapeHtml(value)}</span></div>`).join("");
 
   $("ranking").innerHTML = decision.ranked.map((item) => `
     <div class="rank">
       <div class="score">${Number(item.score).toFixed(4)}</div>
       <div>
-        <strong>${item.id}</strong>
-        <span>${item.reasons.length ? item.reasons.join(", ") : "weighted score"}</span>
+        <strong>${escapeHtml(item.id)}</strong>
+        <span>${escapeHtml(item.reasons.length ? item.reasons.join(", ") : "weighted score")}</span>
       </div>
-      <span class="pill">${item.provider}</span>
+      <span class="pill">${escapeHtml(item.provider)}</span>
     </div>
   `).join("");
   const rejected = decision.policy?.rejected || [];
   if (rejected.length) {
-    $("ranking").innerHTML += `<div class="row"><strong>Policy rejected</strong><span>${rejected.map((item) => `${item.id}: ${item.reason}`).join(" / ")}</span></div>`;
+    $("ranking").innerHTML += `<div class="row"><strong>Policy rejected</strong><span>${escapeHtml(rejected.map((item) => `${item.id}: ${item.reason}`).join(" / "))}</span></div>`;
   }
 }
 
@@ -116,8 +122,8 @@ async function loadHealth() {
   const data = await request("/api/health");
   $("health").innerHTML = data.providers.map((provider) => `
     <div class="row">
-      <strong class="${provider.ok ? "ok" : "not-ok"}">${provider.id}</strong>
-      <span>${provider.provider}: ${provider.detail}</span>
+      <strong class="${provider.ok ? "ok" : "not-ok"}">${escapeHtml(provider.id)}</strong>
+      <span>${escapeHtml(provider.provider)}: ${escapeHtml(provider.detail)}</span>
     </div>
   `).join("");
 }
@@ -127,15 +133,15 @@ async function loadTelemetry() {
   $("telemetry").innerHTML = data.events.length
     ? data.events.reverse().map((event) => `
       <div class="row">
-        <strong>${event.event || "event"}</strong>
-        <span>${event.created_at || ""}</span>
-        <p>${event.selected_model || event.decision?.recommended_model || event.profile || ""}</p>
+        <strong>${escapeHtml(event.event || "event")}</strong>
+        <span>${escapeHtml(event.created_at || "")}</span>
+        <p>${escapeHtml(event.selected_model || event.decision?.recommended_model || event.profile || "")}</p>
       </div>
     `).join("")
     : `<div class="row"><span>No telemetry yet.</span></div>`;
   const dashboard = await request("/api/dashboard");
   $("dashboard").innerHTML = dashboard.models.length
-    ? dashboard.models.map((item) => `<span>${item.model_id}: ${item.runs} runs, ${item.ok_rate * 100}% ok, ${item.avg_latency_ms} ms avg</span>`).join("")
+    ? dashboard.models.map((item) => `<span>${escapeHtml(item.model_id)}: ${item.runs} runs, ${item.ok_rate * 100}% ok, ${item.avg_latency_ms} ms avg</span>`).join("")
     : `<span>No model runs yet.</span>`;
 }
 
@@ -177,6 +183,7 @@ function applyFrame(frame, assistant) {
     $("output").textContent = assistant.textContent;
   }
   if (event === "done") $("status").textContent = "Executed";
+  if (event === "fallback") $("status").textContent = `Fallback ${data.from} to ${data.to}`;
   if (event === "error") {
     $("status").textContent = "Provider error";
     assistant.textContent = data.error;
@@ -207,11 +214,11 @@ function newChat() {
 function renderModels(models) {
   $("models").innerHTML = models.map((model) => `
     <article class="model">
-      <strong>${model.name}</strong>
-      <span>${model.provider} / ${model.model}</span>
+      <strong>${escapeHtml(model.name)}</strong>
+      <span>${escapeHtml(model.provider)} / ${escapeHtml(model.model)}</span>
       <span>${model.local ? "local" : "external"}${model.discovered ? " / discovered" : ""}</span>
       <label>Route with model
-        <input data-model-id="${model.id}" type="checkbox" ${model.enabled ? "checked" : ""}>
+        <input data-model-id="${escapeHtml(model.id)}" type="checkbox" ${model.enabled ? "checked" : ""}>
       </label>
     </article>
   `).join("");
@@ -228,6 +235,10 @@ async function toggleModel(id, enabled) {
 
 async function discoverCatalog() {
   $("catalogSources").textContent = "Refreshing model sources...";
+  await request("/api/settings", {
+    method: "POST",
+    body: JSON.stringify({ catalog: { openrouter_enabled: $("openrouterCatalog").checked } }),
+  });
   const catalog = await request("/api/catalog");
   $("catalogSources").textContent = catalog.sources
     .map((source) => `${source.id}: ${source.ok ? `${source.count} models` : source.detail}`)
@@ -248,9 +259,9 @@ async function compareModels() {
   renderDecision(data.decision);
   $("compareResult").innerHTML = data.comparisons.map((item) => `
     <div class="row">
-      <strong>${item.model}</strong>
-      <span>${item.provider}${item.fallback_attempted ? ` / fallback ${item.fallback_attempted}` : ""}</span>
-      <pre>${item.error || item.output || "Dry compare route. Enable execution to compare responses."}</pre>
+      <strong>${escapeHtml(item.model)}</strong>
+      <span>${escapeHtml(item.provider)}${item.fallback_attempted ? ` / fallback ${escapeHtml(item.fallback_attempted)}` : ""}</span>
+      <pre>${escapeHtml(item.error || item.output || "Dry compare route. Enable execution to compare responses.")}</pre>
     </div>
   `).join("");
   $("status").textContent = "Compared";
@@ -261,8 +272,8 @@ async function runEvals() {
   const data = await request("/api/evals");
   $("evalResults").innerHTML = data.results.map((item) => `
     <div class="row">
-      <strong class="${item.passed ? "ok" : "not-ok"}">${item.passed ? "PASS" : "FAIL"} ${item.name}</strong>
-      <span>${item.profile}: expected ${item.expected_model}, got ${item.actual_model}</span>
+      <strong class="${item.passed ? "ok" : "not-ok"}">${item.passed ? "PASS" : "FAIL"} ${escapeHtml(item.name)}</strong>
+      <span>${escapeHtml(item.profile)}: expected ${escapeHtml(item.expected_model)}, got ${escapeHtml(item.actual_model)}</span>
     </div>
   `).join("");
 }

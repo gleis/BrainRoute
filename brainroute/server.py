@@ -20,12 +20,16 @@ from .telemetry import read_events, write_event
 
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
+MAX_BODY_BYTES = 2 * 1024 * 1024
 
 
 class BrainRouteHandler(BaseHTTPRequestHandler):
     server_version = "BrainRoute/0.1"
 
     def do_GET(self) -> None:
+        if self.path == "/healthz":
+            self._json({"ok": True, "service": "brainroute"})
+            return
         if self.path == "/v1/models":
             if not self._api_auth():
                 return
@@ -67,6 +71,9 @@ class BrainRouteHandler(BaseHTTPRequestHandler):
         self._static()
 
     def do_POST(self) -> None:
+        if int(self.headers.get("Content-Length", "0") or 0) > MAX_BODY_BYTES:
+            self._json({"error": "Request body exceeds 2 MiB"}, status=413)
+            return
         if self.path == "/v1/chat/completions":
             if not self._api_auth():
                 return
@@ -188,7 +195,20 @@ class BrainRouteHandler(BaseHTTPRequestHandler):
         except (BrokenPipeError, ConnectionResetError):
             return
         except ProviderError as exc:
-            self._sse("error", {"error": str(exc)})
+            fallback = decision.fallback.model if decision.fallback else None
+            if output or not fallback or fallback["id"] == model["id"]:
+                self._sse("error", {"error": str(exc)})
+                return
+            self._sse("fallback", {"from": model["id"], "to": fallback["id"], "reason": str(exc)})
+            try:
+                for chunk in stream_with_metrics(fallback, prompt):
+                    output.append(chunk)
+                    self._sse("chunk", {"text": chunk})
+                if session_id:
+                    append_message(session_id, "assistant", "".join(output), {"model": fallback["id"]})
+                self._sse("done", {"model": fallback["id"], "response_chars": len("".join(output))})
+            except ProviderError as fallback_exc:
+                self._sse("error", {"error": f"{exc}; fallback failed: {fallback_exc}"})
 
     def _v1_chat(self, payload: dict[str, Any]) -> None:
         messages = payload.get("messages", [])

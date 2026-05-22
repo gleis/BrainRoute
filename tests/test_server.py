@@ -26,6 +26,11 @@ class ServerTests(unittest.TestCase):
         self.assertIn("balanced", data["profiles"])
         self.assertGreaterEqual(len(data["models"]), 3)
 
+    def test_healthz_endpoint(self):
+        with urllib.request.urlopen(f"{self.base_url}/healthz") as response:
+            data = json.loads(response.read().decode("utf-8"))
+        self.assertTrue(data["ok"])
+
     def test_dashboard_endpoint(self):
         with urllib.request.urlopen(f"{self.base_url}/api/dashboard") as response:
             data = json.loads(response.read().decode("utf-8"))
