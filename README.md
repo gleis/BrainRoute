@@ -1,4 +1,4 @@
-# BrainRoute
+# BrainRoute - LLM Router
 
 BrainRoute is an early MVP for an intelligent model router: it looks at a request, scores available local and cloud models against your routing profile, and chooses the best model for the job.
 
