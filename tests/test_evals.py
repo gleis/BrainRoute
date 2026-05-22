@@ -1,7 +1,7 @@
 import unittest
 
-from brainpicker.config import load_config
-from brainpicker.evals import run_evals
+from brainroute.config import load_config
+from brainroute.evals import run_evals
 
 
 class EvalTests(unittest.TestCase):
@@ -13,4 +13,3 @@ class EvalTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

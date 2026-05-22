@@ -1,6 +1,6 @@
-# BrainPicker
+# BrainRoute
 
-BrainPicker is an early MVP for an intelligent model router: it looks at a request, scores available local and cloud models against your routing profile, and chooses the best model for the job.
+BrainRoute is an early MVP for an intelligent model router: it looks at a request, scores available local and cloud models against your routing profile, and chooses the best model for the job.
 
 The first version is intentionally small:
 
@@ -16,18 +16,18 @@ The first version is intentionally small:
 ## Quick Start
 
 ```bash
-python3 -m brainpicker.cli route "Refactor this Python module for readability"
-python3 -m brainpicker.cli route "Summarize this private medical note" --profile private
-python3 -m brainpicker.cli ask "Say hello in one sentence" --profile cheap --dry-run
-python3 -m brainpicker.cli models
-python3 -m brainpicker.cli health
-python3 -m brainpicker.cli eval
+python3 -m brainroute.cli route "Refactor this Python module for readability"
+python3 -m brainroute.cli route "Summarize this private medical note" --profile private
+python3 -m brainroute.cli ask "Say hello in one sentence" --profile cheap --dry-run
+python3 -m brainroute.cli models
+python3 -m brainroute.cli health
+python3 -m brainroute.cli eval
 ```
 
 Start the local test app:
 
 ```bash
-python3 -m brainpicker.server
+python3 -m brainroute.server
 ```
 
 Then open [http://127.0.0.1:8765](http://127.0.0.1:8765).
@@ -40,9 +40,9 @@ python3 -m unittest discover -s tests
 
 ## Configuration
 
-Model metadata lives in [config/models.yaml](/Users/gleis/Documents/BrainPicker/config/models.yaml).
+Model metadata lives in [config/models.yaml](config/models.yaml).
 
-Routing weights live in [config/router.weights.yaml](/Users/gleis/Documents/BrainPicker/config/router.weights.yaml).
+Routing weights live in [config/router.weights.yaml](config/router.weights.yaml).
 
 Profiles let you make tradeoffs explicit:
 
@@ -60,14 +60,14 @@ Ollama:
 ```bash
 ollama serve
 ollama pull qwen3:8b
-python3 -m brainpicker.cli ask "Write a short project tagline" --model local-qwen3 --execute
+python3 -m brainroute.cli ask "Write a short project tagline" --model local-qwen3 --execute
 ```
 
 OpenAI:
 
 ```bash
 export OPENAI_API_KEY="..."
-python3 -m brainpicker.cli ask "Write a short project tagline" --model gpt-5.4-mini --execute
+python3 -m brainroute.cli ask "Write a short project tagline" --model gpt-5.4-mini --execute
 ```
 
 The OpenAI adapter uses the Responses API (`POST /v1/responses`), which is the current primary text generation interface in OpenAI's API reference as of this scaffold.
@@ -86,10 +86,10 @@ The local UI lets you:
 
 ## Evaluation
 
-BrainPicker includes a tiny routing eval set in [config/evals.yaml](/Users/gleis/Documents/BrainPicker/config/evals.yaml). Run it after changing model scores or routing weights:
+BrainRoute includes a tiny routing eval set in [config/evals.yaml](config/evals.yaml). Run it after changing model scores or routing weights:
 
 ```bash
-python3 -m brainpicker.cli eval
+python3 -m brainroute.cli eval
 ```
 
 This does not call any model providers. It checks whether the router chooses the expected model for representative prompts.

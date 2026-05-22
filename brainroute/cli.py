@@ -12,7 +12,7 @@ from .telemetry import read_events, write_event
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="brainpicker")
+    parser = argparse.ArgumentParser(prog="brainroute")
     subcommands = parser.add_subparsers(dest="command", required=True)
 
     route_parser = subcommands.add_parser("route", help="Rank models for a prompt")

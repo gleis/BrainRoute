@@ -16,8 +16,8 @@ from .telemetry import read_events, write_event
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 
-class BrainPickerHandler(BaseHTTPRequestHandler):
-    server_version = "BrainPicker/0.1"
+class BrainRouteHandler(BaseHTTPRequestHandler):
+    server_version = "BrainRoute/0.1"
 
     def do_GET(self) -> None:
         if self.path == "/api/config":
@@ -147,12 +147,12 @@ def _public_model(model: dict[str, Any]) -> dict[str, Any]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="brainpicker-server")
+    parser = argparse.ArgumentParser(prog="brainroute-server")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", default=8765, type=int)
     args = parser.parse_args(argv)
-    server = ThreadingHTTPServer((args.host, args.port), BrainPickerHandler)
-    print(f"BrainPicker running at http://{args.host}:{args.port}")
+    server = ThreadingHTTPServer((args.host, args.port), BrainRouteHandler)
+    print(f"BrainRoute running at http://{args.host}:{args.port}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

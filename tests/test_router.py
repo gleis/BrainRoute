@@ -1,8 +1,8 @@
 import unittest
 
-from brainpicker.config import load_config
-from brainpicker.router import route
-from brainpicker.simple_yaml import load_simple_yaml
+from brainroute.config import load_config
+from brainroute.router import route
+from brainroute.simple_yaml import load_simple_yaml
 
 
 class RouterTests(unittest.TestCase):
@@ -33,4 +33,3 @@ class RouterTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

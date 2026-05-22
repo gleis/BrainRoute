@@ -5,7 +5,7 @@ from typing import Any
 
 
 def load_simple_yaml(path: str | Path) -> dict[str, Any]:
-    """Load the small YAML subset used by BrainPicker config files.
+    """Load the small YAML subset used by BrainRoute config files.
 
     This is intentionally not a general YAML parser. It supports nested maps,
     lists of scalars, and lists of maps using two-space indentation.
@@ -121,4 +121,3 @@ def _parse_scalar(value: str) -> Any:
         return int(value)
     except ValueError:
         return value.strip("\"'")
-

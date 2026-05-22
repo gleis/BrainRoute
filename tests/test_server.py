@@ -4,13 +4,13 @@ import unittest
 import urllib.request
 from http.server import ThreadingHTTPServer
 
-from brainpicker.server import BrainPickerHandler
+from brainroute.server import BrainRouteHandler
 
 
 class ServerTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.server = ThreadingHTTPServer(("127.0.0.1", 0), BrainPickerHandler)
+        cls.server = ThreadingHTTPServer(("127.0.0.1", 0), BrainRouteHandler)
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
         cls.base_url = f"http://127.0.0.1:{cls.server.server_address[1]}"
@@ -46,4 +46,3 @@ class ServerTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
