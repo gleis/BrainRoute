@@ -1,8 +1,8 @@
 models:
-  - id: local-qwen3
-    name: Qwen3 Local
+  - id: local-qwen2-5
+    name: Qwen2.5 Local
     provider: ollama
-    model: qwen3:8b
+    model: qwen2.5:7b
     endpoint: http://localhost:11434/api/chat
     local: true
     enabled: true
@@ -57,4 +57,3 @@ models:
     quality_score: 0.95
     cost_score: 0.25
     max_context: 200000
-

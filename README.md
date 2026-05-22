@@ -59,8 +59,8 @@ Ollama:
 
 ```bash
 ollama serve
-ollama pull qwen3:8b
-python3 -m brainroute.cli ask "Write a short project tagline" --model local-qwen3 --execute
+ollama pull qwen2.5:7b
+python3 -m brainroute.cli ask "Write a short project tagline" --model local-qwen2-5 --execute
 ```
 
 OpenAI:

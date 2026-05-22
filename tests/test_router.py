@@ -9,12 +9,12 @@ class RouterTests(unittest.TestCase):
     def test_loads_yaml_config(self):
         data = load_simple_yaml("config/models.yaml")
         self.assertGreaterEqual(len(data["models"]), 3)
-        self.assertEqual(data["models"][0]["id"], "local-qwen3")
+        self.assertEqual(data["models"][0]["id"], "local-qwen2-5")
 
     def test_private_profile_prefers_local_model(self):
         config = load_config()
         decision = route("Summarize this confidential patient note", config, profile_name="private")
-        self.assertEqual(decision.selected.model["id"], "local-qwen3")
+        self.assertEqual(decision.selected.model["id"], "local-qwen2-5")
         self.assertEqual(decision.task.privacy_level, "high")
 
     def test_urgent_profile_prefers_fast_model(self):

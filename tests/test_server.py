@@ -41,7 +41,7 @@ class ServerTests(unittest.TestCase):
         with urllib.request.urlopen(request) as response:
             data = json.loads(response.read().decode("utf-8"))
         self.assertFalse(data["executed"])
-        self.assertEqual(data["decision"]["recommended_model"], "local-qwen3")
+        self.assertEqual(data["decision"]["recommended_model"], "local-qwen2-5")
 
 
 if __name__ == "__main__":

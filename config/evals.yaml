@@ -2,7 +2,7 @@ cases:
   - name: private_summary_prefers_local
     prompt: Summarize this confidential patient note.
     profile: private
-    expected_model: local-qwen3
+    expected_model: local-qwen2-5
 
   - name: urgent_short_writing_prefers_fast_cloud
     prompt: Quickly write a short status update.
@@ -13,4 +13,3 @@ cases:
     prompt: Design a complex production architecture for a multi-provider AI routing layer.
     profile: balanced
     expected_model: premium-reasoner
-
