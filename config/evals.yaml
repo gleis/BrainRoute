@@ -1,15 +1,85 @@
+# Routing evals. These never call a provider - they assert which model the
+# router selects, and why. Run after any change to weights, model scores,
+# prices, or postures: `python3 -m brainroute.cli eval`.
+#
+# Optional per-case assertions:
+#   posture            - pin the privacy posture for this case
+#   expected_task_type / expected_complexity / expected_privacy / expected_urgency
+#   expected_warning   - require a warning code (e.g. privacy_escalation)
+#   expect_no_warnings - require a clean decision
+#   min_margin         - fail if the winner beat the runner-up by less than this
+
 cases:
+  # --- privacy rules that hold under every posture ------------------------
   - name: private_summary_prefers_local
     prompt: Summarize this confidential patient note.
     profile: private
     expected_model: local-qwen2-5
+    expected_privacy: high
+    expected_task_type: summarization
 
-  - name: urgent_short_writing_prefers_fast_cloud
+  - name: private_signal_overrides_balanced_profile
+    prompt: Extract the key terms from this confidential internal payroll record.
+    profile: balanced
+    expected_model: local-qwen2-5
+    expected_privacy: high
+
+  # --- default posture: local first ---------------------------------------
+  - name: local_first_keeps_easy_work_local
+    prompt: Rename these three variables.
+    posture: local_first
+    profile: balanced
+    expected_model: local-qwen2-5
+    expected_complexity: low
+    expect_no_warnings: true
+
+  - name: local_first_keeps_urgent_work_local
     prompt: Quickly write a short status update.
+    posture: local_first
     profile: urgent
-    expected_model: gpt-5.4-mini
+    expected_model: local-qwen2-5
+    expected_urgency: high
 
-  - name: complex_architecture_prefers_premium
+  - name: local_first_escalates_hard_work_and_warns
     prompt: Design a complex production architecture for a multi-provider AI routing layer.
+    posture: local_first
     profile: balanced
     expected_model: premium-reasoner
+    expected_complexity: high
+    expected_task_type: reasoning
+    expected_warning: privacy_escalation
+
+  # --- local only: nothing leaves without an explicit opt-in --------------
+  - name: local_only_keeps_hard_work_local
+    prompt: Design a complex production architecture for a multi-provider AI routing layer.
+    posture: local_only
+    profile: balanced
+    expected_model: local-qwen2-5
+
+  - name: air_gapped_keeps_hard_work_local
+    prompt: Design a complex production architecture for a multi-provider AI routing layer.
+    posture: air_gapped
+    profile: balanced
+    expected_model: local-qwen2-5
+
+  # --- open posture: capability and cost compete freely -------------------
+  - name: open_posture_prefers_fast_cloud_when_urgent
+    prompt: Quickly write a short status update.
+    posture: open
+    profile: urgent
+    expected_model: gpt-5.4-mini
+    expected_urgency: high
+
+  - name: open_posture_prefers_premium_for_complex_work
+    prompt: Design a complex production architecture for a multi-provider AI routing layer.
+    posture: open
+    profile: balanced
+    expected_model: premium-reasoner
+    expected_complexity: high
+
+  - name: open_posture_still_prefers_local_when_cheap
+    prompt: Rename these three variables.
+    posture: open
+    profile: cheap
+    expected_model: local-qwen2-5
+    expected_complexity: low

@@ -19,9 +19,18 @@ async function request(path, options = {}) {
   });
   const data = await response.json();
   if (!response.ok) {
-    throw new Error(data.error || data.fallback_error || data.decision?.reason || "Request failed");
+    throw new Error(errorMessage(data) || "Request failed");
   }
   return data;
+}
+
+// Errors arrive either as a plain string or as an OpenAI-style
+// { error: { message, type } } object, depending on the endpoint.
+function errorMessage(data) {
+  if (!data) return "";
+  if (typeof data.error === "string") return data.error;
+  if (data.error?.message) return data.error.message;
+  return data.fallback_error || data.decision?.reason || "";
 }
 
 async function loadConfig() {
@@ -36,7 +45,7 @@ async function loadConfig() {
   renderModels(state.config.models);
   renderClassifier();
   renderPolicy();
-  $("openrouterCatalog").checked = state.config.settings.catalog.openrouter_enabled;
+  renderRemoteSources();
 }
 
 async function routePrompt(event) {
@@ -98,8 +107,18 @@ function renderDecision(decision) {
     ["Fallback", decision.fallback_model || "None"],
     ["Task", `${decision.task_type} / ${decision.complexity}`],
     ["Classifier", `${decision.classifier} / ${Math.round((decision.confidence || 0) * 100)}%`],
+    ["Destination", decision.local ? "local" : "cloud"],
+    ["Posture", decision.policy?.posture || "-"],
     ["Reason", decision.reason],
   ].map(([label, value]) => `<div class="metric"><strong>${escapeHtml(label)}</strong><span>${escapeHtml(value)}</span></div>`).join("");
+
+  // A privacy trade should never be silent.
+  $("warnings").innerHTML = (decision.warnings || []).map((item) => `
+    <div class="row warning">
+      <strong>${escapeHtml(item.code)}</strong>
+      <span>${escapeHtml(item.message)}</span>
+    </div>
+  `).join("");
 
   $("ranking").innerHTML = decision.ranked.map((item) => `
     <div class="rank">
@@ -211,12 +230,23 @@ function newChat() {
   $("status").textContent = "New chat";
 }
 
+// An estimated window is worth distinguishing: it is the one that can send a
+// long prompt to the cloud unnecessarily, or get it truncated.
+function formatContext(model) {
+  if (!model.max_context) return "context unknown";
+  const size = model.max_context >= 1024
+    ? `${Math.round(model.max_context / 1024)}k context`
+    : `${model.max_context} context`;
+  return model.context_source === "estimated" ? `${size} (estimated)` : size;
+}
+
 function renderModels(models) {
   $("models").innerHTML = models.map((model) => `
     <article class="model">
       <strong>${escapeHtml(model.name)}</strong>
       <span>${escapeHtml(model.provider)} / ${escapeHtml(model.model)}</span>
       <span>${model.local ? "local" : "external"}${model.discovered ? " / discovered" : ""}</span>
+      <span>${formatContext(model)}</span>
       <label>Route with model
         <input data-model-id="${escapeHtml(model.id)}" type="checkbox" ${model.enabled ? "checked" : ""}>
       </label>
@@ -233,12 +263,40 @@ async function toggleModel(id, enabled) {
   await loadConfig();
 }
 
-async function discoverCatalog() {
-  $("catalogSources").textContent = "Refreshing model sources...";
+// Remote sources are declared in settings, not hard-coded, so the UI only
+// toggles whichever gateways the operator has configured.
+function renderRemoteSources() {
+  const sources = state.config.settings.catalog.remote_sources || [];
+  if (!sources.length) {
+    $("remoteSources").innerHTML =
+      `<p class="sources">Local models are discovered automatically. To add an
+       OpenAI-compatible gateway, define <code>catalog.remote_sources</code> in
+       settings.</p>`;
+    return;
+  }
+  $("remoteSources").innerHTML = sources.map((source, index) => `
+    <label class="checkbox">
+      <input data-source-index="${index}" type="checkbox" ${source.enabled ? "checked" : ""}>
+      Include ${escapeHtml(source.id || "remote")} catalog
+    </label>
+  `).join("");
+  for (const input of $("remoteSources").querySelectorAll("input")) {
+    input.addEventListener("change", () => toggleRemoteSource(Number(input.dataset.sourceIndex), input.checked));
+  }
+}
+
+async function toggleRemoteSource(index, enabled) {
+  const sources = (state.config.settings.catalog.remote_sources || []).map((item, i) =>
+    i === index ? { ...item, enabled } : item);
   await request("/api/settings", {
     method: "POST",
-    body: JSON.stringify({ catalog: { openrouter_enabled: $("openrouterCatalog").checked } }),
+    body: JSON.stringify({ catalog: { remote_sources: sources } }),
   });
+  await loadConfig();
+}
+
+async function discoverCatalog() {
+  $("catalogSources").textContent = "Refreshing model sources...";
   const catalog = await request("/api/catalog");
   $("catalogSources").textContent = catalog.sources
     .map((source) => `${source.id}: ${source.ok ? `${source.count} models` : source.detail}`)
@@ -303,11 +361,44 @@ async function saveClassifier() {
 
 function renderPolicy() {
   const policy = state.config.settings.policy;
+  const routing = state.config.settings.routing;
+  const pinned = state.config.pinned_policy || [];
+
+  $("posture").innerHTML = (state.config.postures || [])
+    .map((item) => `<option value="${item.id}" ${item.id === policy.posture ? "selected" : ""}>${escapeHtml(item.label)}</option>`)
+    .join("");
+  renderPostureDescription();
+
   $("preferLocal").checked = policy.prefer_local;
   $("allowCloud").checked = policy.allow_cloud;
   $("allowPrivateCloud").checked = policy.allow_cloud_for_private;
+  $("localBonus").value = policy.local_bonus;
+  $("floorHigh").value = routing.capability_floor.high;
   $("requestBudget").value = policy.max_estimated_cost_usd;
   $("monthlyBudget").value = policy.monthly_budget_usd;
+
+  // Show which flags the posture no longer controls because they were pinned.
+  for (const [id, key] of [
+    ["preferLocal", "prefer_local"],
+    ["allowCloud", "allow_cloud"],
+    ["allowPrivateCloud", "allow_cloud_for_private"],
+  ]) {
+    $(id).closest("label").classList.toggle("pinned", pinned.includes(key));
+  }
+}
+
+function renderPostureDescription() {
+  const selected = (state.config.postures || []).find((item) => item.id === $("posture").value);
+  $("postureDescription").textContent = selected ? selected.description : "";
+}
+
+async function setPosture() {
+  await request("/api/postures", {
+    method: "POST",
+    body: JSON.stringify({ posture: $("posture").value }),
+  });
+  $("status").textContent = `Privacy posture set to ${$("posture").value}`;
+  await loadConfig();
 }
 
 async function savePolicy() {
@@ -318,12 +409,25 @@ async function savePolicy() {
         prefer_local: $("preferLocal").checked,
         allow_cloud: $("allowCloud").checked,
         allow_cloud_for_private: $("allowPrivateCloud").checked,
+        local_bonus: Number($("localBonus").value),
         max_estimated_cost_usd: Number($("requestBudget").value),
         monthly_budget_usd: Number($("monthlyBudget").value),
+      },
+      routing: {
+        capability_floor: { high: Number($("floorHigh").value) },
       },
     }),
   });
   $("status").textContent = "Routing policy saved";
+  await loadConfig();
+}
+
+async function resetPolicyOverrides() {
+  await request("/api/postures", {
+    method: "POST",
+    body: JSON.stringify({ posture: $("posture").value, reset_overrides: true }),
+  });
+  $("status").textContent = "Policy flags reset to the posture defaults";
   await loadConfig();
 }
 
@@ -337,6 +441,8 @@ async function boot() {
   $("refreshModels").addEventListener("click", discoverCatalog);
   $("saveClassifier").addEventListener("click", saveClassifier);
   $("savePolicy").addEventListener("click", savePolicy);
+  $("posture").addEventListener("change", setPosture);
+  $("resetPolicyOverrides").addEventListener("click", resetPolicyOverrides);
   $("goodFeedback").addEventListener("click", () => sendFeedback("good"));
   $("badFeedback").addEventListener("click", () => sendFeedback("bad"));
   $("stop").addEventListener("click", stopStream);

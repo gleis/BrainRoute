@@ -7,10 +7,17 @@ on:
 jobs:
   unittest:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.12"
-      - run: python3 -m unittest discover -s tests
+          python-version: ${{ matrix.python-version }}
+      # -t . so the tests package __init__ runs and redirects state to a
+      # temporary directory instead of the checkout's data/.
+      - run: python3 -m unittest discover -s tests -t . -v
       - run: python3 -m brainroute.cli eval
+      - run: python3 -m brainroute.cli route "Refactor this module" --explain

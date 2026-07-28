@@ -1,3 +1,13 @@
+# Seed model registry.
+#
+# quality_score, speed_score and privacy_score are priors: they express what you
+# believe about a model before it has run. Telemetry corrects speed and quality
+# once enough requests have been observed.
+#
+# cost_score is NOT hand-set. It is derived from the prices below so that the
+# budget policy and the cheap profile agree with what you are actually billed.
+# Prices are USD per 1M tokens.
+
 models:
   - id: local-qwen2-5
     name: Qwen2.5 Local
@@ -17,7 +27,8 @@ models:
     privacy_score: 1.0
     speed_score: 0.80
     quality_score: 0.65
-    cost_score: 1.0
+    input_price_per_mtok: 0.0
+    output_price_per_mtok: 0.0
     max_context: 32768
 
   - id: gpt-5.4-mini
@@ -36,13 +47,20 @@ models:
     privacy_score: 0.40
     speed_score: 0.85
     quality_score: 0.85
-    cost_score: 0.65
+    input_price_per_mtok: 0.25
+    output_price_per_mtok: 2.00
     max_context: 128000
 
+  # Placeholder for whichever frontier model you actually use. It routes as a
+  # high-capability cloud option but cannot execute until you give it an
+  # endpoint and api_key_env, at which point it fails fast with a clear message
+  # rather than pretending to work.
   - id: premium-reasoner
     name: Premium Reasoner
-    provider: external
+    provider: openai_compatible
+    provider_label: premium
     model: premium-reasoner
+    api_key_env: PREMIUM_API_KEY
     local: false
     enabled: true
     strengths:
@@ -50,10 +68,10 @@ models:
       - coding
       - legal
       - long_context
-    weaknesses:
-      - cheap
+    weaknesses: []
     privacy_score: 0.35
     speed_score: 0.55
     quality_score: 0.95
-    cost_score: 0.25
+    input_price_per_mtok: 3.00
+    output_price_per_mtok: 15.00
     max_context: 200000

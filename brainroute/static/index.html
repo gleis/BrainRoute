@@ -47,6 +47,7 @@
             <span id="status">Ready</span>
           </div>
           <div id="summary" class="summary"></div>
+          <div id="warnings" class="warnings"></div>
           <div class="feedback">
             <button id="goodFeedback" class="secondary" type="button">Good Route</button>
             <button id="badFeedback" class="secondary" type="button">Bad Route</button>
@@ -85,10 +86,7 @@
           <h2>Model Catalog</h2>
           <button id="refreshModels" type="button">Discover Models</button>
         </div>
-        <label class="checkbox catalog-toggle">
-          <input id="openrouterCatalog" type="checkbox">
-          Include OpenRouter catalog discovery
-        </label>
+        <div id="remoteSources" class="catalog-toggle"></div>
         <div id="catalogSources" class="sources"></div>
         <div id="models" class="model-grid"></div>
         <div class="classifier">
@@ -103,12 +101,20 @@
           <button id="saveClassifier" type="button">Save Router</button>
         </div>
         <div class="policy">
+          <label>
+            Privacy posture
+            <select id="posture"></select>
+          </label>
+          <p id="postureDescription" class="posture-description"></p>
           <label class="checkbox"><input id="preferLocal" type="checkbox"> Prefer local routes</label>
           <label class="checkbox"><input id="allowCloud" type="checkbox"> Allow cloud</label>
           <label class="checkbox"><input id="allowPrivateCloud" type="checkbox"> Allow private prompts in cloud</label>
+          <label>Local bonus <input id="localBonus" type="number" min="0" max="1" step="0.05"></label>
+          <label>Capability floor (hard tasks) <input id="floorHigh" type="number" min="0" max="1" step="0.05"></label>
           <label>Max request cost <input id="requestBudget" type="number" min="0" step="0.01"></label>
           <label>Monthly budget <input id="monthlyBudget" type="number" min="0" step="1"></label>
           <button id="savePolicy" type="button">Save Policy</button>
+          <button id="resetPolicyOverrides" type="button">Reset to Posture</button>
         </div>
       </section>
       <section class="evals">

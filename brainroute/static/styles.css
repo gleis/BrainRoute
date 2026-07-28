@@ -366,6 +366,50 @@ textarea {
   color: var(--bad);
 }
 
+/* A privacy trade should be visible without being alarming. */
+.warnings:empty {
+  display: none;
+}
+
+.warnings {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.row.warning {
+  background: color-mix(in srgb, var(--warn) 10%, transparent);
+  border-left: 3px solid var(--warn);
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+
+.row.warning strong {
+  color: var(--warn);
+}
+
+.posture-description {
+  color: var(--muted);
+  font-size: 0.85rem;
+  grid-column: 1 / -1;
+  margin: 0;
+}
+
+/* Flags the user pinned no longer follow the posture. */
+label.pinned {
+  position: relative;
+}
+
+label.pinned::after {
+  content: "pinned";
+  background: var(--line);
+  border-radius: 4px;
+  font-size: 0.65rem;
+  margin-left: 6px;
+  padding: 1px 5px;
+  text-transform: uppercase;
+}
+
 @media (max-width: 880px) {
   .workspace,
   .lower {

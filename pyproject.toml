@@ -1,14 +1,25 @@
 [project]
 name = "brainroute"
-version = "0.1.0"
+version = "0.2.0"
 description = "A local-first intelligent model router for choosing the best model per task."
 requires-python = ">=3.11"
 authors = [{ name = "BrainRoute" }]
 readme = "README.md"
+dependencies = []
 
 [project.scripts]
 brainroute = "brainroute.cli:main"
 brainroute-server = "brainroute.server:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["brainroute*"]
+
+[tool.setuptools.package-data]
+brainroute = ["static/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

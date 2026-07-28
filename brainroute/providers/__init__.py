@@ -1,4 +1,12 @@
-from .base import ProviderError, generate, stream_generate
+from .base import flatten, generate, stream_generate, to_messages
 from .health import provider_health
+from .http import ProviderError
 
-__all__ = ["ProviderError", "generate", "stream_generate", "provider_health"]
+__all__ = [
+    "ProviderError",
+    "flatten",
+    "generate",
+    "provider_health",
+    "stream_generate",
+    "to_messages",
+]
