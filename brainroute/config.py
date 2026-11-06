@@ -7,13 +7,13 @@ from typing import Any
 from . import catalog as catalog_module
 from .cache import TTLCache
 from .catalog import discover_models, overlay_models
-from .config_paths import ROOT
+from .config_paths import CONFIG_DIR
 from .settings import settings_version
 from .simple_yaml import load_simple_yaml
 
 
-DEFAULT_MODELS_PATH = ROOT / "config" / "models.yaml"
-DEFAULT_WEIGHTS_PATH = ROOT / "config" / "router.weights.yaml"
+DEFAULT_MODELS_PATH = CONFIG_DIR / "models.yaml"
+DEFAULT_WEIGHTS_PATH = CONFIG_DIR / "router.weights.yaml"
 
 # The five scoring dimensions. Weights are normalised against this set so that
 # profiles can be written with intuitive numbers that need not sum to 1.

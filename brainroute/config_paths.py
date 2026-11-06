@@ -11,5 +11,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CONFIG_DIR = Path(os.environ.get("BRAINROUTE_CONFIG_DIR") or ROOT / "config")
-DATA_DIR = Path(os.environ.get("BRAINROUTE_DATA_DIR") or ROOT / "data")
+CHECKOUT_CONFIG = ROOT / "config"
+DEFAULT_CONFIG_DIR = CHECKOUT_CONFIG if CHECKOUT_CONFIG.is_dir() else Path(__file__).resolve().parent / "defaults"
+CONFIG_DIR = Path(os.environ.get("BRAINROUTE_CONFIG_DIR") or DEFAULT_CONFIG_DIR)
+DEFAULT_DATA_DIR = ROOT / "data" if CHECKOUT_CONFIG.is_dir() else Path.home() / ".local" / "share" / "brainroute"
+DATA_DIR = Path(os.environ.get("BRAINROUTE_DATA_DIR") or DEFAULT_DATA_DIR)

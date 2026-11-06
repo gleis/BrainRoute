@@ -1,0 +1,21 @@
+name: Package quality
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install build ruff
+      - run: ruff check --select E9,F63,F7,F82 brainroute tests
+      - run: python -m build
+      - run: pip install dist/*.whl
+      - name: Verify installed catalog and evals
+        working-directory: ${{ runner.temp }}
+        env:
+          BRAINROUTE_DATA_DIR: ${{ runner.temp }}/brainroute-data
+        run: brainroute eval

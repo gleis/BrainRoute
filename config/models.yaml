@@ -10,9 +10,9 @@
 
 models:
   - id: local-qwen2-5
-    name: Qwen2.5 Local
+    name: Qwen3 Local
     provider: ollama
-    model: qwen2.5:7b
+    model: qwen3:8b
     endpoint: http://localhost:11434/api/chat
     local: true
     enabled: true
@@ -47,9 +47,9 @@ models:
     privacy_score: 0.40
     speed_score: 0.85
     quality_score: 0.85
-    input_price_per_mtok: 0.25
-    output_price_per_mtok: 2.00
-    max_context: 128000
+    input_price_per_mtok: 0.75
+    output_price_per_mtok: 4.50
+    max_context: 400000
 
   # Placeholder for whichever frontier model you actually use. It routes as a
   # high-capability cloud option but cannot execute until you give it an

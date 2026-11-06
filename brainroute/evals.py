@@ -13,13 +13,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .config import ROOT, RouterConfig
+from .config import RouterConfig
+from .config_paths import CONFIG_DIR
 from .router import NoRouteAvailable, route
 from .settings import override
 from .simple_yaml import load_simple_yaml
 
 
-DEFAULT_EVALS_PATH = ROOT / "config" / "evals.yaml"
+DEFAULT_EVALS_PATH = CONFIG_DIR / "evals.yaml"
 
 
 @dataclass(frozen=True)

@@ -342,3 +342,11 @@ Run it after any change to weights, model scores, prices, or postures.
 - **Caching.** Provider discovery, assembled config, and classification are TTL-cached, so a routing decision does not depend on live network calls. Settings writes invalidate the caches immediately.
 - **Failure handling.** Every HTTP handler runs inside an error boundary that returns JSON rather than dropping the connection or leaking a traceback.
 - **Credentials** belong in the process environment, never in config files.
+
+## Maintenance (2026-11-06)
+
+The bundled Qwen3 8B seed is available from https://ollama.com/library/qwen3:8b. GPT-5.4 mini pricing was checked on 2026-11-06 against https://developers.openai.com/api/docs/models/gpt-5.4-mini: $0.75 input and $4.50 output per million tokens, 400,000 context. Prices are estimates; review before budgeting paid workloads. Existing local model IDs stay stable for saved preferences.
+
+The manually dispatched Publish package workflow uses PyPI trusted publishing. Configure the `pypi` GitHub environment and register this repository/workflow as a trusted publisher in the PyPI project before dispatching. CI builds wheel and source distributions without publishing.
+
+Installed wheels include the seed model catalog and eval suite. Package installs store state in `~/.local/share/brainroute`; source checkouts retain `data/`. Override with `BRAINROUTE_DATA_DIR` and `BRAINROUTE_CONFIG_DIR`.
