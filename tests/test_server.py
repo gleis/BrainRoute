@@ -66,9 +66,12 @@ class ReadEndpointTests(ServerTestCase):
         self.assertIn("brainroute-auto", [item["id"] for item in data["data"]])
 
     def test_evals_endpoint(self):
-        _, data = self.get("/api/evals")
+        # Reference routing expectations use seed scores; earlier HTTP tests
+        # deliberately record latency telemetry that differs across runners.
+        with patch("brainroute.scorer.snapshot", return_value={}):
+            _, data = self.get("/api/evals")
         self.assertTrue(data["results"])
-        self.assertEqual(data["passed"], data["total"])
+        self.assertEqual(data["passed"], data["total"], [r for r in data["results"] if not r["passed"]])
 
     def test_responses_carry_a_request_id(self):
         response, _ = self.get("/healthz")
