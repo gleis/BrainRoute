@@ -1,6 +1,6 @@
 # Routing evals. These never call a provider - they assert which model the
 # router selects, and why. Run after any change to weights, model scores,
-# prices, or postures: `python3 -m brainroute.cli eval`.
+# prices, or postures: `python3 -m modelroute.cli eval`.
 #
 # Optional per-case assertions:
 #   posture            - pin the privacy posture for this case

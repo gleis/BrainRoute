@@ -1,10 +1,10 @@
 import unittest
 from unittest.mock import patch
 
-from brainroute import catalog, postures
-from brainroute.config import load_config
-from brainroute.router import route
-from brainroute.settings import DEFAULT_SETTINGS, load_settings, override
+from modelroute import catalog, postures
+from modelroute.config import load_config
+from modelroute.router import route
+from modelroute.settings import DEFAULT_SETTINGS, load_settings, override
 
 
 HARD = "Design a complex production architecture for a multi-provider routing layer"
@@ -68,7 +68,7 @@ class RemoteDiscoveryTests(unittest.TestCase):
                 "chat_url": "https://gateway.example.com/v1/chat/completions",
             }]},
         }
-        with override(scope), patch("brainroute.catalog._read_json", side_effect=spy):
+        with override(scope), patch("modelroute.catalog._read_json", side_effect=spy):
             result = catalog.discover_models(force_refresh=True)
         return [url for url in urls if url == self.GATEWAY], result
 

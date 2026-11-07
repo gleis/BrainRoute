@@ -295,7 +295,7 @@ def _connection() -> sqlite3.Connection:
     if db is not None:
         return db
     DATA_DIR.mkdir(parents=True, exist_ok=True)
-    db = sqlite3.connect(DATA_DIR / "brainroute.sqlite", timeout=30, check_same_thread=False)
+    db = sqlite3.connect(DATA_DIR / "modelroute.sqlite", timeout=30, check_same_thread=False)
     db.execute("pragma busy_timeout=30000")
     _enable_wal(db)
     with _init_lock:

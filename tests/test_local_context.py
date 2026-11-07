@@ -11,18 +11,18 @@ Two failure modes are covered here, and they pull in opposite directions:
 import unittest
 from unittest.mock import patch
 
-from brainroute import catalog
-from brainroute.classifier import TaskProfile
-from brainroute.execution import required_context
-from brainroute.policy import apply_policy
-from brainroute.pricing import apply_pricing
-from brainroute.providers.ollama import (
+from modelroute import catalog
+from modelroute.classifier import TaskProfile
+from modelroute.execution import required_context
+from modelroute.policy import apply_policy
+from modelroute.pricing import apply_pricing
+from modelroute.providers.ollama import (
     NUM_CTX_BUCKETS,
     OLLAMA_DEFAULT_NUM_CTX,
     _payload,
     resolve_num_ctx,
 )
-from brainroute.settings import override
+from modelroute.settings import override
 
 
 TAGS = {"models": [
@@ -43,8 +43,8 @@ def discover(show=SHOW, detect=True):
         return show[payload["model"]]
 
     with override({"catalog": {"detect_local_context": detect}}), \
-         patch("brainroute.catalog._read_json", return_value=TAGS), \
-         patch("brainroute.catalog._post_json", side_effect=fake_post):
+         patch("modelroute.catalog._read_json", return_value=TAGS), \
+         patch("modelroute.catalog._post_json", side_effect=fake_post):
         return {m["model"]: m for m in catalog.discover_ollama("http://localhost:11434")}
 
 
@@ -138,8 +138,8 @@ class LongPromptRoutingTests(unittest.TestCase):
         # Budgets are generous here so the context window is the only thing
         # these assertions can be measuring.
         with override({"policy": {"max_estimated_cost_usd": 100.0}}), \
-             patch("brainroute.policy.snapshot", return_value={}), \
-             patch("brainroute.policy.spend_since", return_value=0):
+             patch("modelroute.policy.snapshot", return_value={}), \
+             patch("modelroute.policy.spend_since", return_value=0):
             return [m["id"] for m in apply_policy(self._models(), task, "x").allowed]
 
     def test_a_nine_thousand_token_prompt_stays_eligible_for_local(self):

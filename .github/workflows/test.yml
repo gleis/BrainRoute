@@ -19,5 +19,5 @@ jobs:
       # -t . so the tests package __init__ runs and redirects state to a
       # temporary directory instead of the checkout's data/.
       - run: python3 -m unittest discover -s tests -t . -v
-      - run: python3 -m brainroute.cli eval
-      - run: python3 -m brainroute.cli route "Refactor this module" --explain
+      - run: python3 -m modelroute.cli eval
+      - run: python3 -m modelroute.cli route "Refactor this module" --explain

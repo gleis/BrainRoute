@@ -1,7 +1,7 @@
 import unittest
 
-from brainroute.config import load_config
-from brainroute.evals import run_evals
+from modelroute.config import load_config
+from modelroute.evals import run_evals
 
 
 class EvalTests(unittest.TestCase):

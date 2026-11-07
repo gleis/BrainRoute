@@ -8,13 +8,13 @@ import urllib.request
 from http.server import ThreadingHTTPServer
 from unittest.mock import patch
 
-from brainroute.server import BrainRouteHandler
+from modelroute.server import ModelRouteHandler
 
 
 class ServerTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.server = ThreadingHTTPServer(("127.0.0.1", 0), BrainRouteHandler)
+        cls.server = ThreadingHTTPServer(("127.0.0.1", 0), ModelRouteHandler)
         cls.server.daemon_threads = True
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
@@ -63,12 +63,12 @@ class ReadEndpointTests(ServerTestCase):
     def test_v1_models_endpoint_advertises_auto_routing(self):
         _, data = self.get("/v1/models")
         self.assertEqual(data["object"], "list")
-        self.assertIn("brainroute-auto", [item["id"] for item in data["data"]])
+        self.assertIn("modelroute-auto", [item["id"] for item in data["data"]])
 
     def test_evals_endpoint(self):
         # Reference routing expectations use seed scores; earlier HTTP tests
         # deliberately record latency telemetry that differs across runners.
-        with patch("brainroute.scorer.snapshot", return_value={}):
+        with patch("modelroute.scorer.snapshot", return_value={}):
             _, data = self.get("/api/evals")
         self.assertTrue(data["results"])
         self.assertEqual(data["passed"], data["total"], [r for r in data["results"] if not r["passed"]])
@@ -168,21 +168,21 @@ class PostureEndpointTests(ServerTestCase):
 
 class GatewayTests(ServerTestCase):
     def test_v1_chat_completions_returns_openai_shape(self):
-        with patch("brainroute.execution.generate", return_value="hello there"):
+        with patch("modelroute.execution.generate", return_value="hello there"):
             _, data = self.post("/v1/chat/completions", {
-                "model": "brainroute-auto",
+                "model": "modelroute-auto",
                 "messages": [{"role": "user", "content": "say hi"}],
             })
         self.assertEqual(data["object"], "chat.completion")
         self.assertEqual(data["choices"][0]["message"]["content"], "hello there")
-        self.assertIn("decision", data["brainroute"])
+        self.assertIn("decision", data["modelroute"])
 
     def test_v1_chat_completions_streams_openai_chunks(self):
-        with patch("brainroute.execution.stream_generate", return_value=iter(["he", "llo"])):
+        with patch("modelroute.execution.stream_generate", return_value=iter(["he", "llo"])):
             request = urllib.request.Request(
                 f"{self.base_url}/v1/chat/completions",
                 data=json.dumps({
-                    "model": "brainroute-auto",
+                    "model": "modelroute-auto",
                     "stream": True,
                     "messages": [{"role": "user", "content": "say hi"}],
                 }).encode("utf-8"),
@@ -206,12 +206,12 @@ class GatewayTests(ServerTestCase):
         self.assertEqual(text, "hello")
 
     def test_provider_failure_surfaces_as_502(self):
-        from brainroute.providers import ProviderError
+        from modelroute.providers import ProviderError
 
-        with patch("brainroute.execution.generate", side_effect=ProviderError("down")):
+        with patch("modelroute.execution.generate", side_effect=ProviderError("down")):
             with self.assertRaises(urllib.error.HTTPError) as caught:
                 self.post("/v1/chat/completions", {
-                    "model": "brainroute-auto",
+                    "model": "modelroute-auto",
                     "messages": [{"role": "user", "content": "hi"}],
                 })
         self.assertEqual(caught.exception.code, 502)
@@ -219,7 +219,7 @@ class GatewayTests(ServerTestCase):
 
 class AuthTests(ServerTestCase):
     def setUp(self):
-        patcher = patch.dict(os.environ, {"BRAINROUTE_API_KEY": "secret-key"})
+        patcher = patch.dict(os.environ, {"MODELROUTE_API_KEY": "secret-key"})
         self.addCleanup(patcher.stop)
         patcher.start()
 

@@ -1,10 +1,10 @@
 import unittest
 from unittest.mock import patch
 
-from brainroute.classifier import TaskProfile, classify
-from brainroute.policy import apply_policy
-from brainroute.reliability import OPEN, ModelReliability
-from brainroute.settings import override
+from modelroute.classifier import TaskProfile, classify
+from modelroute.policy import apply_policy
+from modelroute.reliability import OPEN, ModelReliability
+from modelroute.settings import override
 
 
 BASE_POLICY = {
@@ -32,9 +32,9 @@ def task(**overrides):
 
 class PolicyTests(unittest.TestCase):
     def setUp(self):
-        settings = patch("brainroute.policy.load_settings", return_value={"policy": dict(BASE_POLICY)})
-        spend = patch("brainroute.policy.spend_since", return_value=0)
-        health = patch("brainroute.policy.snapshot", return_value={})
+        settings = patch("modelroute.policy.load_settings", return_value={"policy": dict(BASE_POLICY)})
+        spend = patch("modelroute.policy.spend_since", return_value=0)
+        health = patch("modelroute.policy.snapshot", return_value={})
         for patcher in (settings, spend, health):
             self.addCleanup(patcher.stop)
         self.settings = settings.start()
@@ -108,8 +108,8 @@ class CloudOverrideTests(unittest.TestCase):
     """Per-request opt-in to cloud, and the postures that refuse it."""
 
     def setUp(self):
-        spend = patch("brainroute.policy.spend_since", return_value=0)
-        health = patch("brainroute.policy.snapshot", return_value={})
+        spend = patch("modelroute.policy.spend_since", return_value=0)
+        health = patch("modelroute.policy.snapshot", return_value={})
         for patcher in (spend, health):
             self.addCleanup(patcher.stop)
             patcher.start()

@@ -1,6 +1,6 @@
 import unittest
 
-from brainroute.catalog import overlay_models
+from modelroute.catalog import overlay_models
 
 
 class CatalogTests(unittest.TestCase):

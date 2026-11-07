@@ -18,7 +18,7 @@ from .telemetry import read_events, write_event
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="brainroute")
+    parser = argparse.ArgumentParser(prog="modelroute")
     parser.add_argument("--discover", action="store_true", help="Include runtime-discovered models")
     subcommands = parser.add_subparsers(dest="command", required=True)
 

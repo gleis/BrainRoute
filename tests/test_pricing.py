@@ -1,6 +1,6 @@
 import unittest
 
-from brainroute.pricing import apply_pricing, cost_score, estimate_request_cost, lookup_price
+from modelroute.pricing import apply_pricing, cost_score, estimate_request_cost, lookup_price
 
 
 class PricingTests(unittest.TestCase):

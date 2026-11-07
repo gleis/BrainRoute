@@ -1,10 +1,10 @@
 import unittest
 from unittest.mock import patch
 
-from brainroute.classifier import TaskProfile
-from brainroute.config import normalize_profile
-from brainroute.reliability import ModelReliability
-from brainroute.scorer import effective_weights, score_models
+from modelroute.classifier import TaskProfile
+from modelroute.config import normalize_profile
+from modelroute.reliability import ModelReliability
+from modelroute.scorer import effective_weights, score_models
 
 
 def task(**overrides):
@@ -61,7 +61,7 @@ class WeightTests(unittest.TestCase):
 
 class ScoringTests(unittest.TestCase):
     def setUp(self):
-        patcher = patch("brainroute.scorer.snapshot", return_value={})
+        patcher = patch("modelroute.scorer.snapshot", return_value={})
         self.addCleanup(patcher.stop)
         patcher.start()
 
@@ -111,13 +111,13 @@ class TelemetryBlendTests(unittest.TestCase):
         slow = ModelReliability(
             model_id="frontier", samples=50, ok_rate=1.0, p95_latency_ms=30_000
         )
-        with patch("brainroute.scorer.snapshot", return_value={"frontier": slow}):
+        with patch("modelroute.scorer.snapshot", return_value={"frontier": slow}):
             ranked = score_models([FRONTIER], BALANCED, task())
         self.assertLess(ranked[0].factors["speed"], FRONTIER["speed_score"])
 
     def test_observed_failures_penalise_the_score(self):
         flaky = ModelReliability(model_id="frontier", samples=20, ok_rate=0.5)
-        with patch("brainroute.scorer.snapshot", return_value={"frontier": flaky}):
+        with patch("modelroute.scorer.snapshot", return_value={"frontier": flaky}):
             ranked = score_models([FRONTIER], BALANCED, task())
         self.assertIn("observed_failures", [item.name for item in ranked[0].adjustments])
 
@@ -125,7 +125,7 @@ class TelemetryBlendTests(unittest.TestCase):
         disliked = ModelReliability(
             model_id="frontier", samples=20, ok_rate=1.0, feedback_score=0.1, feedback_votes=20
         )
-        with patch("brainroute.scorer.snapshot", return_value={"frontier": disliked}):
+        with patch("modelroute.scorer.snapshot", return_value={"frontier": disliked}):
             ranked = score_models([FRONTIER], BALANCED, task())
         self.assertLess(ranked[0].factors["quality"], FRONTIER["quality_score"])
 

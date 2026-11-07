@@ -2,8 +2,8 @@ import unittest
 from datetime import datetime, timedelta, timezone
 from unittest.mock import patch
 
-from brainroute import reliability
-from brainroute.reliability import (
+from modelroute import reliability
+from modelroute.reliability import (
     CLOSED,
     HALF_OPEN,
     OPEN,
@@ -38,8 +38,8 @@ class CircuitBreakerTests(unittest.TestCase):
         self.addCleanup(reliability.invalidate)
 
     def _snapshot(self, stats):
-        with patch("brainroute.reliability.model_stats", return_value=stats), \
-             patch("brainroute.reliability.feedback_stats", return_value={}):
+        with patch("modelroute.reliability.model_stats", return_value=stats), \
+             patch("modelroute.reliability.feedback_stats", return_value={}):
             return snapshot(force_refresh=True)
 
     def test_circuit_stays_closed_below_the_failure_threshold(self):
@@ -58,8 +58,8 @@ class CircuitBreakerTests(unittest.TestCase):
         self.assertTrue(entry.available)
 
     def test_snapshot_is_cached_between_calls(self):
-        with patch("brainroute.reliability.model_stats", return_value={}) as stats, \
-             patch("brainroute.reliability.feedback_stats", return_value={}):
+        with patch("modelroute.reliability.model_stats", return_value={}) as stats, \
+             patch("modelroute.reliability.feedback_stats", return_value={}):
             snapshot(force_refresh=True)
             snapshot()
             snapshot()

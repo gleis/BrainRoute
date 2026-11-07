@@ -1,10 +1,10 @@
 import unittest
 from unittest.mock import patch
 
-from brainroute.config import load_config
-from brainroute.execution import execute_with_fallback
-from brainroute.providers import ProviderError
-from brainroute.router import route
+from modelroute.config import load_config
+from modelroute.execution import execute_with_fallback
+from modelroute.providers import ProviderError
+from modelroute.router import route
 
 
 class FallbackTests(unittest.TestCase):
@@ -14,12 +14,12 @@ class FallbackTests(unittest.TestCase):
         # Run records are global routing signal. Capturing them here keeps
         # simulated provider outages from teaching the real router that these
         # models are unhealthy.
-        recorder = patch("brainroute.execution.record_run")
+        recorder = patch("modelroute.execution.record_run")
         self.addCleanup(recorder.stop)
         self.record_run = recorder.start()
 
     def test_every_attempt_is_recorded_as_routing_evidence(self):
-        with patch("brainroute.execution.generate", side_effect=ProviderError("down")):
+        with patch("modelroute.execution.generate", side_effect=ProviderError("down")):
             execute_with_fallback(self.decision.selected.model, self.decision, "prompt")
         recorded = [call.args[0] for call in self.record_run.call_args_list]
         self.assertEqual(len(recorded), 1 + len(self.decision.fallback_chain))
@@ -27,7 +27,7 @@ class FallbackTests(unittest.TestCase):
         self.assertTrue(all(run["latency_ms"] >= 0 for run in recorded))
 
     def test_a_successful_run_records_tokens_and_cost(self):
-        with patch("brainroute.execution.generate", return_value="hello world"):
+        with patch("modelroute.execution.generate", return_value="hello world"):
             execute_with_fallback(self.decision.selected.model, self.decision, "prompt")
         run = self.record_run.call_args_list[0].args[0]
         self.assertTrue(run["ok"])
@@ -35,7 +35,7 @@ class FallbackTests(unittest.TestCase):
         self.assertGreaterEqual(run["estimated_cost_usd"], 0)
 
     def test_the_first_working_model_is_used(self):
-        with patch("brainroute.execution.generate", return_value="done") as generate:
+        with patch("modelroute.execution.generate", return_value="done") as generate:
             result = execute_with_fallback(
                 self.decision.selected.model, self.decision, "prompt"
             )
@@ -53,7 +53,7 @@ class FallbackTests(unittest.TestCase):
                 raise ProviderError("provider down", retryable=False)
             return "recovered"
 
-        with patch("brainroute.execution.generate", side_effect=maybe):
+        with patch("modelroute.execution.generate", side_effect=maybe):
             result = execute_with_fallback(
                 self.decision.selected.model, self.decision, "prompt"
             )
@@ -63,7 +63,7 @@ class FallbackTests(unittest.TestCase):
         self.assertTrue(any(not item.ok for item in result.attempts))
 
     def test_total_failure_reports_every_attempt(self):
-        with patch("brainroute.execution.generate", side_effect=ProviderError("down")):
+        with patch("modelroute.execution.generate", side_effect=ProviderError("down")):
             result = execute_with_fallback(
                 self.decision.selected.model, self.decision, "prompt"
             )
@@ -79,7 +79,7 @@ class FallbackTests(unittest.TestCase):
             {"role": "system", "content": "be terse"},
             {"role": "user", "content": "hello"},
         ]
-        with patch("brainroute.execution.generate", return_value="ok") as generate:
+        with patch("modelroute.execution.generate", return_value="ok") as generate:
             execute_with_fallback(self.decision.selected.model, self.decision, conversation)
         sent = generate.call_args[0][1]
         self.assertEqual(sent, conversation)

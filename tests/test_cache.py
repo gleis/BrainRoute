@@ -1,6 +1,6 @@
 import unittest
 
-from brainroute.cache import TTLCache
+from modelroute.cache import TTLCache
 
 
 class TTLCacheTests(unittest.TestCase):

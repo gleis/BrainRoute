@@ -1,5 +1,5 @@
 [project]
-name = "brainroute"
+name = "modelroute"
 version = "0.2.0"
 description = "A local-first intelligent model router for choosing the best model per task."
 requires-python = ">=3.11"
@@ -9,18 +9,18 @@ license = "Apache-2.0"
 dependencies = []
 
 [project.scripts]
-brainroute = "brainroute.cli:main"
-brainroute-server = "brainroute.server:main"
+modelroute = "modelroute.cli:main"
+modelroute-server = "modelroute.server:main"
 
 [build-system]
 requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["brainroute*"]
+include = ["modelroute*"]
 
 [tool.setuptools.package-data]
-brainroute = ["static/*", "defaults/*.yaml"]
+modelroute = ["static/*", "defaults/*.yaml"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

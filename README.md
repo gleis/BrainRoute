@@ -1,7 +1,5 @@
 # ModelRoute — privacy-first LLM router
 
-ModelRoute was previously named BrainRoute. Existing installs use the `brainroute` Python package and commands, along with their existing configuration and state paths.
-
 ModelRoute picks the right model for each request. It classifies the prompt, applies admission policy, scores every eligible local and cloud model, executes the winner with a fallback chain, records what happened, and feeds that back into the next decision.
 
 Local by default. Cloud only when a local model genuinely cannot do the job — and it tells you when that happens.
@@ -14,9 +12,9 @@ Requires Python 3.11+.
 
 ```bash
 python3 -m unittest discover -s tests -t .   # hermetic: no providers, no network
-python3 -m brainroute.cli eval               # routing evals
-python3 -m brainroute.cli route "Design a distributed ingestion pipeline" --explain
-python3 -m brainroute.server                 # then open http://127.0.0.1:8765
+python3 -m modelroute.cli eval               # routing evals
+python3 -m modelroute.cli route "Design a distributed ingestion pipeline" --explain
+python3 -m modelroute.server                 # then open http://127.0.0.1:8765
 ```
 
 Nothing above calls a model provider. `-t .` matters on the test command: it lets the `tests` package redirect state to a temporary directory instead of writing telemetry into your real `data/`.
@@ -25,7 +23,7 @@ To actually execute a request, add `--execute`:
 
 ```bash
 ollama serve && ollama pull qwen2.5:7b
-python3 -m brainroute.cli ask "Write a short project tagline" --model local-qwen2-5 --execute
+python3 -m modelroute.cli ask "Write a short project tagline" --model local-qwen2-5 --execute
 ```
 
 ## Privacy postures
@@ -40,9 +38,9 @@ A posture is a named stance on where data may go, so the common decision is one 
 | `air_gapped` | Rejected, discovery disabled | **Refused** | No outbound traffic except your own local runtime |
 
 ```bash
-python3 -m brainroute.cli posture              # show postures and the active one
-python3 -m brainroute.cli posture local_only   # switch
-python3 -m brainroute.cli policy               # resolved policy; * marks flags you pinned
+python3 -m modelroute.cli posture              # show postures and the active one
+python3 -m modelroute.cli posture local_only   # switch
+python3 -m modelroute.cli policy               # resolved policy; * marks flags you pinned
 ```
 
 Two rules hold under **every** posture, including `open`:
@@ -53,14 +51,14 @@ Two rules hold under **every** posture, including `open`:
 Under `local_only` a caller can escalate a single request explicitly, and the decision is flagged:
 
 ```bash
-python3 -m brainroute.cli route "Design a distributed ingestion pipeline" --allow-cloud
+python3 -m modelroute.cli route "Design a distributed ingestion pipeline" --allow-cloud
 ```
 
 `air_gapped` refuses that opt-in outright. A posture a single API call can switch off is not a guarantee.
 
 ### Postures are a starting point, not a cage
 
-A posture supplies every policy flag you have *not* set yourself. Pin a flag explicitly and it survives posture switches — the UI marks pinned flags, `brainroute policy` marks them with `*`, and `brainroute posture --reset-overrides` hands control back.
+A posture supplies every policy flag you have *not* set yourself. Pin a flag explicitly and it survives posture switches — the UI marks pinned flags, `modelroute policy` marks them with `*`, and `modelroute posture --reset-overrides` hands control back.
 
 This works because only your explicit values are written to `data/settings.json`:
 
@@ -121,7 +119,7 @@ Five factors — quality, speed, cost, privacy, task fit — each 0-1.
 `--explain` prints the full arithmetic:
 
 ```
-$ brainroute route "Design a complex production architecture for a routing layer" --explain
+$ modelroute route "Design a complex production architecture for a routing layer" --explain
 
 Recommended: premium-reasoner (0.8214) [cloud]
 Fallbacks:   gpt-5.4-mini -> local-qwen2-5
@@ -160,7 +158,7 @@ Every attempt writes a run record: latency, token counts, estimated cost, succes
 
 Optional epsilon-greedy **exploration** occasionally promotes a near-tied runner-up so the router keeps learning about models it would otherwise never pick. Off by default, so routing stays deterministic and evals reproducible.
 
-`brainroute reliability` shows observed success rates, p95 latency, and circuit state.
+`modelroute reliability` shows observed success rates, p95 latency, and circuit state.
 
 ## Models and providers
 
@@ -273,9 +271,9 @@ A model with no price signal scores mid-market (0.5) rather than free, so an unp
 | --- | --- |
 | `OPENAI_API_KEY` | OpenAI credential |
 | per-model `api_key_env` | Credential for any `openai_compatible` endpoint |
-| `BRAINROUTE_API_KEY` | Require `Authorization: Bearer ...` on the gateway and state-changing admin endpoints |
-| `BRAINROUTE_DATA_DIR` | Move SQLite state and settings off the checkout |
-| `BRAINROUTE_CONFIG_DIR` | Move YAML config off the checkout |
+| `MODELROUTE_API_KEY` | Require `Authorization: Bearer ...` on the gateway and state-changing admin endpoints |
+| `MODELROUTE_DATA_DIR` | Move SQLite state and settings off the checkout |
+| `MODELROUTE_CONFIG_DIR` | Move YAML config off the checkout |
 
 ## Web UI
 
@@ -311,10 +309,10 @@ Point any OpenAI client at it:
 ```bash
 curl http://127.0.0.1:8765/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -d '{"model":"brainroute-auto","messages":[{"role":"user","content":"Write a release note."}],"stream":true}'
+  -d '{"model":"modelroute-auto","messages":[{"role":"user","content":"Write a release note."}],"stream":true}'
 ```
 
-Use `"model": "brainroute-auto"` to let the router choose, or name a model to pin it. Add `"brainroute_profile": "cheap"` to select a profile, or `"brainroute_allow_cloud": true` for a per-request cloud opt-in. Non-streaming responses include the full routing decision under a `brainroute` key.
+Use `"model": "modelroute-auto"` to let the router choose, or name a model to pin it. Add `"modelroute_profile": "cheap"` to select a profile, or `"modelroute_allow_cloud": true` for a per-request cloud opt-in. Non-streaming responses include the full routing decision under a `modelroute` key.
 
 ## Evaluation
 
@@ -330,7 +328,7 @@ Use `"model": "brainroute-auto"` to let the router choose, or name a model to pi
 ```
 
 ```bash
-python3 -m brainroute.cli eval
+python3 -m modelroute.cli eval
 ```
 
 Run it after any change to weights, model scores, prices, or postures.
@@ -338,9 +336,9 @@ Run it after any change to weights, model scores, prices, or postures.
 ## Production notes
 
 - **Binding.** Run behind a host firewall or reverse proxy when binding beyond loopback. The server warns if you do so without an API key set.
-- **Auth.** `BRAINROUTE_API_KEY` protects the gateway and every state-changing admin endpoint — including posture changes, the most security-relevant write the API exposes — compared in constant time. Read-only endpoints stay open for the local UI; set `gateway.protect_admin_api` to `false` to opt out.
+- **Auth.** `MODELROUTE_API_KEY` protects the gateway and every state-changing admin endpoint — including posture changes, the most security-relevant write the API exposes — compared in constant time. Read-only endpoints stay open for the local UI; set `gateway.protect_admin_api` to `false` to opt out.
 - **Rate limiting.** Per-client fixed window over the API surface, configurable via `gateway.rate_limit_per_minute`. Static assets are exempt.
-- **State.** SQLite in WAL mode with indexes and per-thread connections, falling back to a rollback journal on filesystems that cannot support WAL. `brainroute prune` caps table growth; the JSONL development log rotates at 16 MiB.
+- **State.** SQLite in WAL mode with indexes and per-thread connections, falling back to a rollback journal on filesystems that cannot support WAL. `modelroute prune` caps table growth; the JSONL development log rotates at 16 MiB.
 - **Caching.** Provider discovery, assembled config, and classification are TTL-cached, so a routing decision does not depend on live network calls. Settings writes invalidate the caches immediately.
 - **Failure handling.** Every HTTP handler runs inside an error boundary that returns JSON rather than dropping the connection or leaking a traceback.
 - **Credentials** belong in the process environment, never in config files.
@@ -351,4 +349,4 @@ The bundled Qwen3 8B seed is available from https://ollama.com/library/qwen3:8b.
 
 The manually dispatched Publish package workflow uses PyPI trusted publishing. Configure the `pypi` GitHub environment and register this repository/workflow as a trusted publisher in the PyPI project before dispatching. CI builds wheel and source distributions without publishing.
 
-Installed wheels include the seed model catalog and eval suite. Package installs store state in `~/.local/share/brainroute`; source checkouts retain `data/`. Override with `BRAINROUTE_DATA_DIR` and `BRAINROUTE_CONFIG_DIR`.
+Installed wheels include the seed model catalog and eval suite. Package installs store state in `~/.local/share/modelroute`; source checkouts retain `data/`. Override with `MODELROUTE_DATA_DIR` and `MODELROUTE_CONFIG_DIR`.

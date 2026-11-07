@@ -1,10 +1,10 @@
 import unittest
 from unittest.mock import patch
 
-from brainroute.config import load_config
-from brainroute.router import NoRouteAvailable, route
-from brainroute.settings import override
-from brainroute.simple_yaml import load_simple_yaml
+from modelroute.config import load_config
+from modelroute.router import NoRouteAvailable, route
+from modelroute.settings import override
+from modelroute.simple_yaml import load_simple_yaml
 
 
 class RouterTests(unittest.TestCase):
@@ -66,7 +66,7 @@ class RouterTests(unittest.TestCase):
         self.assertIn("Available:", str(caught.exception))
 
     def test_no_admissible_model_raises_a_typed_error(self):
-        with patch("brainroute.router.apply_policy") as policy:
+        with patch("modelroute.router.apply_policy") as policy:
             policy.return_value = type(
                 "R", (), {"allowed": (), "rejected": ({"id": "x", "reason": "disabled"},),
                           "settings": {}, "monthly_spend_usd": 0.0}
@@ -87,9 +87,9 @@ class RouterTests(unittest.TestCase):
             "routing": {"exploration_rate": 1.0, "exploration_score_margin": 1.0,
                         "max_fallback_depth": 2},
         }
-        with patch("brainroute.router.load_settings", return_value=settings), \
-             patch("brainroute.router.random.random", return_value=0.0), \
-             patch("brainroute.router.random.choice", side_effect=lambda options: options[0]):
+        with patch("modelroute.router.load_settings", return_value=settings), \
+             patch("modelroute.router.random.random", return_value=0.0), \
+             patch("modelroute.router.random.choice", side_effect=lambda options: options[0]):
             decision = route("Write a haiku", self.config)
         self.assertTrue(decision.exploration)
 

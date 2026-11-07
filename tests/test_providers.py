@@ -1,14 +1,14 @@
 import unittest
 from unittest.mock import patch
 
-from brainroute.providers import (
+from modelroute.providers import (
     ProviderError,
     flatten,
     generate,
     stream_generate,
     to_messages,
 )
-from brainroute.providers.http import RETRYABLE_STATUS, with_retries
+from modelroute.providers.http import RETRYABLE_STATUS, with_retries
 
 
 class MessageTests(unittest.TestCase):
@@ -51,7 +51,7 @@ class RetryTests(unittest.TestCase):
                 raise ProviderError("503", retryable=True)
             return "ok"
 
-        with patch("brainroute.providers.http.time.sleep"):
+        with patch("modelroute.providers.http.time.sleep"):
             self.assertEqual(with_retries(flaky, retries=3), "ok")
         self.assertEqual(calls["count"], 3)
 
@@ -62,7 +62,7 @@ class RetryTests(unittest.TestCase):
             calls["count"] += 1
             raise ProviderError("401", status=401, retryable=False)
 
-        with patch("brainroute.providers.http.time.sleep"):
+        with patch("modelroute.providers.http.time.sleep"):
             with self.assertRaises(ProviderError):
                 with_retries(unauthorised, retries=3)
         self.assertEqual(calls["count"], 1)
@@ -74,7 +74,7 @@ class RetryTests(unittest.TestCase):
             calls["count"] += 1
             raise ProviderError("503", retryable=True)
 
-        with patch("brainroute.providers.http.time.sleep"):
+        with patch("modelroute.providers.http.time.sleep"):
             with self.assertRaises(ProviderError):
                 with_retries(always_fails, retries=2)
         self.assertEqual(calls["count"], 3)
@@ -106,7 +106,7 @@ class OpenAICompatibleTests(unittest.TestCase):
             return {"choices": [{"message": {"content": "hello"}}]}
 
         with patch.dict("os.environ", {"MY_GATEWAY_KEY": "sk-test"}), \
-             patch("brainroute.providers.openai_compatible.post_json", side_effect=fake_post):
+             patch("modelroute.providers.openai_compatible.post_json", side_effect=fake_post):
             self.assertEqual(generate(self.MODEL, "hi"), "hello")
 
         self.assertEqual(captured["url"], self.MODEL["endpoint"])
@@ -137,12 +137,12 @@ class OpenAICompatibleTests(unittest.TestCase):
             return {"choices": [{"message": {"content": "ok"}}]}
 
         with patch.dict("os.environ", {}, clear=True), \
-             patch("brainroute.providers.openai_compatible.post_json", side_effect=fake_post):
+             patch("modelroute.providers.openai_compatible.post_json", side_effect=fake_post):
             self.assertEqual(generate(model, "hi"), "ok")
 
     def test_an_error_body_becomes_a_provider_error(self):
         with patch.dict("os.environ", {"MY_GATEWAY_KEY": "k"}), \
-             patch("brainroute.providers.openai_compatible.post_json",
+             patch("modelroute.providers.openai_compatible.post_json",
                    return_value={"error": {"message": "model overloaded"}}):
             with self.assertRaises(ProviderError) as caught:
                 generate(self.MODEL, "hi")
@@ -157,7 +157,7 @@ class OpenAICompatibleTests(unittest.TestCase):
             "data: [DONE]",
         ]
         with patch.dict("os.environ", {"MY_GATEWAY_KEY": "k"}), \
-             patch("brainroute.providers.openai_compatible.stream_lines", return_value=iter(lines)):
+             patch("modelroute.providers.openai_compatible.stream_lines", return_value=iter(lines)):
             self.assertEqual("".join(stream_generate(self.MODEL, "hi")), "hello")
 
     def test_extra_body_reaches_the_request(self):
@@ -169,7 +169,7 @@ class OpenAICompatibleTests(unittest.TestCase):
 
         model = {**self.MODEL, "extra_body": {"temperature": 0.1, "top_p": 0.9}}
         with patch.dict("os.environ", {"MY_GATEWAY_KEY": "k"}), \
-             patch("brainroute.providers.openai_compatible.post_json", side_effect=fake_post):
+             patch("modelroute.providers.openai_compatible.post_json", side_effect=fake_post):
             generate(model, "hi")
         self.assertEqual(captured["temperature"], 0.1)
 

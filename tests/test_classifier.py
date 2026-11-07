@@ -1,8 +1,8 @@
 import unittest
 from unittest.mock import patch
 
-from brainroute import classifier
-from brainroute.classifier import classify, classify_prompt, classify_with_model
+from modelroute import classifier
+from modelroute.classifier import classify, classify_prompt, classify_with_model
 
 
 VALID_RESPONSE = {
@@ -48,7 +48,7 @@ class StructuredClassifierTests(unittest.TestCase):
         self.addCleanup(classifier.invalidate)
 
     def test_structured_classifier_validates_response(self):
-        with patch("brainroute.classifier.call_ollama_json", return_value=VALID_RESPONSE):
+        with patch("modelroute.classifier.call_ollama_json", return_value=VALID_RESPONSE):
             task = classify_with_model(
                 "Review this confidential code.", {"id": "local", "provider": "ollama"}
             )
@@ -59,7 +59,7 @@ class StructuredClassifierTests(unittest.TestCase):
 
     def test_invalid_fields_fall_back_to_heuristic_values(self):
         garbage = {**VALID_RESPONSE, "task_type": "astrology", "complexity": 9, "confidence": "x"}
-        with patch("brainroute.classifier.call_ollama_json", return_value=garbage):
+        with patch("modelroute.classifier.call_ollama_json", return_value=garbage):
             task = classify_with_model("Refactor this python module", {"id": "m", "provider": "ollama"})
         self.assertEqual(task.task_type, "coding")
         self.assertIn(task.complexity, {"low", "medium", "high"})
@@ -68,19 +68,19 @@ class StructuredClassifierTests(unittest.TestCase):
     def test_a_missed_privacy_signal_is_restored_from_the_heuristic(self):
         # Under-detecting privacy is the costlier error, so the heuristic wins.
         lax = {**VALID_RESPONSE, "privacy_level": "normal"}
-        with patch("brainroute.classifier.call_ollama_json", return_value=lax):
+        with patch("modelroute.classifier.call_ollama_json", return_value=lax):
             task = classify_with_model("Handle this confidential patient record", {"id": "m", "provider": "ollama"})
         self.assertEqual(task.privacy_level, "high")
 
     def test_repeat_prompts_are_served_from_cache(self):
-        with patch("brainroute.classifier.call_ollama_json", return_value=VALID_RESPONSE) as call:
+        with patch("modelroute.classifier.call_ollama_json", return_value=VALID_RESPONSE) as call:
             model = {"id": "local", "provider": "ollama"}
             classify_with_model("same prompt", model)
             classify_with_model("same prompt", model)
         self.assertEqual(call.call_count, 1)
 
     def test_classifier_failure_degrades_to_the_heuristic(self):
-        with patch("brainroute.classifier.call_ollama_json", side_effect=RuntimeError("offline")):
+        with patch("modelroute.classifier.call_ollama_json", side_effect=RuntimeError("offline")):
             task = classify_prompt("Refactor this python module", {"id": "m", "provider": "ollama"})
         self.assertEqual(task.classifier, "heuristic")
         self.assertEqual(task.task_type, "coding")

@@ -3,7 +3,7 @@
 Settings are composed in three layers, lowest precedence first:
 
 1. ``DEFAULT_SETTINGS`` - the schema and safe operating point.
-2. The active **privacy posture** preset (see :mod:`brainroute.postures`).
+2. The active **privacy posture** preset (see :mod:`modelroute.postures`).
 3. The user's own saved values.
 
 Only layer 3 is written to disk. That separation is what makes postures useful:
@@ -30,7 +30,7 @@ from .config_paths import DATA_DIR
 # Context-scoped settings layer used by evals and tests. A ContextVar keeps it
 # from leaking across threads in the threaded HTTP server.
 _overrides: ContextVar[dict[str, Any] | None] = ContextVar(
-    "brainroute_settings_override", default=None
+    "modelroute_settings_override", default=None
 )
 
 

@@ -11,11 +11,11 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install build ruff
-      - run: ruff check --select E9,F63,F7,F82 brainroute tests
+      - run: ruff check --select E9,F63,F7,F82 modelroute tests
       - run: python -m build
       - run: pip install dist/*.whl
       - name: Verify installed catalog and evals
         working-directory: ${{ runner.temp }}
         env:
-          BRAINROUTE_DATA_DIR: ${{ runner.temp }}/brainroute-data
-        run: brainroute eval
+          MODELROUTE_DATA_DIR: ${{ runner.temp }}/modelroute-data
+        run: modelroute eval

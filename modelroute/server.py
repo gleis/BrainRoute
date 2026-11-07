@@ -44,7 +44,7 @@ from .telemetry import read_events, write_event
 
 STATIC_DIR = Path(__file__).resolve().parent / "static"
 MAX_BODY_BYTES = 2 * 1024 * 1024
-AUTO_MODEL = "brainroute-auto"
+AUTO_MODEL = "modelroute-auto"
 
 # Endpoints that change state or spend money. When an API key is configured
 # these require it, so an unauthenticated caller cannot rewrite routing policy
@@ -92,8 +92,8 @@ class RateLimiter:
 _rate_limiter = RateLimiter(load_settings()["gateway"].get("rate_limit_per_minute", 120))
 
 
-class BrainRouteHandler(BaseHTTPRequestHandler):
-    server_version = "BrainRoute/1.0"
+class ModelRouteHandler(BaseHTTPRequestHandler):
+    server_version = "ModelRoute/1.0"
     protocol_version = "HTTP/1.1"
 
     # ---- dispatch ---------------------------------------------------------
@@ -146,7 +146,7 @@ class BrainRouteHandler(BaseHTTPRequestHandler):
             write_event({"event": "error", "request_id": self.request_id, "path": self.path_only, "error": str(exc)})
             self._json({"error": {"message": f"Internal error: {exc}", "type": "internal"}}, status=500)
 
-    def _prefix_handler(self, method: str) -> Callable[[BrainRouteHandler], None] | None:
+    def _prefix_handler(self, method: str) -> Callable[[ModelRouteHandler], None] | None:
         for (route_method, prefix), handler in _PREFIX_ROUTES.items():
             if method == route_method and self.path_only.startswith(prefix):
                 return handler
@@ -158,7 +158,7 @@ class BrainRouteHandler(BaseHTTPRequestHandler):
     # ---- read endpoints ---------------------------------------------------
 
     def _healthz(self) -> None:
-        self._json({"ok": True, "service": "brainroute", "version": self.server_version})
+        self._json({"ok": True, "service": "modelroute", "version": self.server_version})
 
     def _api_config(self) -> None:
         config = load_config(discover=True)
@@ -229,13 +229,13 @@ class BrainRouteHandler(BaseHTTPRequestHandler):
             {
                 "id": model["id"],
                 "object": "model",
-                "owned_by": model.get("provider", "brainroute"),
+                "owned_by": model.get("provider", "modelroute"),
                 "context_window": model.get("max_context"),
             }
             for model in config.models
             if model.get("enabled")
         ]
-        data.insert(0, {"id": AUTO_MODEL, "object": "model", "owned_by": "brainroute"})
+        data.insert(0, {"id": AUTO_MODEL, "object": "model", "owned_by": "modelroute"})
         self._json({"object": "list", "data": data})
 
     # ---- write endpoints --------------------------------------------------
@@ -429,9 +429,9 @@ class BrainRouteHandler(BaseHTTPRequestHandler):
         config = load_config(discover=True)
         decision = route(
             flatten(messages), config,
-            profile_name=payload.get("brainroute_profile"),
+            profile_name=payload.get("modelroute_profile"),
             request_id=self.request_id,
-            overrides={"allow_cloud": bool(payload.get("brainroute_allow_cloud"))},
+            overrides={"allow_cloud": bool(payload.get("modelroute_allow_cloud"))},
         )
         requested = payload.get("model")
         model = (
@@ -451,7 +451,7 @@ class BrainRouteHandler(BaseHTTPRequestHandler):
             )
             return
         self._json({
-            "id": f"brainroute-{self.request_id}",
+            "id": f"modelroute-{self.request_id}",
             "object": "chat.completion",
             "created": int(time.time()),
             "model": result.model["id"],
@@ -460,7 +460,7 @@ class BrainRouteHandler(BaseHTTPRequestHandler):
                 "finish_reason": "stop",
                 "message": {"role": "assistant", "content": result.output},
             }],
-            "brainroute": {
+            "modelroute": {
                 "decision": decision.as_dict(),
                 "fallback_attempted": result.fallback_attempted,
                 "attempts": [item.as_dict() for item in result.attempts],
@@ -469,7 +469,7 @@ class BrainRouteHandler(BaseHTTPRequestHandler):
 
     def _v1_chat_stream(self, model: dict[str, Any], decision: Any, messages: list[dict[str, str]]) -> None:
         """Emit OpenAI-compatible streaming chunks so standard clients work."""
-        completion_id = f"brainroute-{self.request_id}"
+        completion_id = f"modelroute-{self.request_id}"
         needed = required_context(messages, decision)
         self._begin_stream()
         for candidate in _stream_candidates(model, decision):
@@ -580,7 +580,7 @@ class BrainRouteHandler(BaseHTTPRequestHandler):
     # ---- auth -------------------------------------------------------------
 
     def _requires_auth(self) -> bool:
-        if not os.environ.get("BRAINROUTE_API_KEY"):
+        if not os.environ.get("MODELROUTE_API_KEY"):
             return False
         if self.path_only.startswith("/v1/"):
             return True
@@ -589,7 +589,7 @@ class BrainRouteHandler(BaseHTTPRequestHandler):
         return self.path_only in PROTECTED_PATHS
 
     def _authorised(self) -> bool:
-        expected = os.environ.get("BRAINROUTE_API_KEY", "")
+        expected = os.environ.get("MODELROUTE_API_KEY", "")
         provided = self.headers.get("Authorization", "")
         # Constant-time comparison keeps the key out of reach of timing attacks.
         return hmac.compare_digest(provided, f"Bearer {expected}")
@@ -601,32 +601,32 @@ class BrainRouteHandler(BaseHTTPRequestHandler):
         self.send_header("Content-Security-Policy", "default-src 'self'; style-src 'self'; script-src 'self'")
 
 
-_ROUTES: dict[tuple[str, str], Callable[[BrainRouteHandler], None]] = {
-    ("GET", "/healthz"): BrainRouteHandler._healthz,
-    ("GET", "/api/config"): BrainRouteHandler._api_config,
-    ("GET", "/api/catalog"): BrainRouteHandler._api_catalog,
-    ("GET", "/api/health"): BrainRouteHandler._api_health,
-    ("GET", "/api/reliability"): BrainRouteHandler._api_reliability,
-    ("GET", "/api/postures"): BrainRouteHandler._api_postures,
-    ("GET", "/api/dashboard"): BrainRouteHandler._api_dashboard,
-    ("GET", "/api/evals"): BrainRouteHandler._api_evals,
-    ("GET", "/api/sessions"): BrainRouteHandler._api_sessions,
-    ("GET", "/v1/models"): BrainRouteHandler._v1_models,
-    ("POST", "/api/route"): BrainRouteHandler._api_route,
-    ("POST", "/api/ask"): BrainRouteHandler._api_ask,
-    ("POST", "/api/chat/stream"): BrainRouteHandler._api_chat_stream,
-    ("POST", "/api/compare"): BrainRouteHandler._api_compare,
-    ("POST", "/api/feedback"): BrainRouteHandler._api_feedback,
-    ("POST", "/api/models"): BrainRouteHandler._api_models,
-    ("POST", "/api/settings"): BrainRouteHandler._api_settings,
-    ("POST", "/api/postures"): BrainRouteHandler._api_set_posture,
-    ("POST", "/api/maintenance/prune"): BrainRouteHandler._api_prune,
-    ("POST", "/v1/chat/completions"): BrainRouteHandler._v1_chat,
+_ROUTES: dict[tuple[str, str], Callable[[ModelRouteHandler], None]] = {
+    ("GET", "/healthz"): ModelRouteHandler._healthz,
+    ("GET", "/api/config"): ModelRouteHandler._api_config,
+    ("GET", "/api/catalog"): ModelRouteHandler._api_catalog,
+    ("GET", "/api/health"): ModelRouteHandler._api_health,
+    ("GET", "/api/reliability"): ModelRouteHandler._api_reliability,
+    ("GET", "/api/postures"): ModelRouteHandler._api_postures,
+    ("GET", "/api/dashboard"): ModelRouteHandler._api_dashboard,
+    ("GET", "/api/evals"): ModelRouteHandler._api_evals,
+    ("GET", "/api/sessions"): ModelRouteHandler._api_sessions,
+    ("GET", "/v1/models"): ModelRouteHandler._v1_models,
+    ("POST", "/api/route"): ModelRouteHandler._api_route,
+    ("POST", "/api/ask"): ModelRouteHandler._api_ask,
+    ("POST", "/api/chat/stream"): ModelRouteHandler._api_chat_stream,
+    ("POST", "/api/compare"): ModelRouteHandler._api_compare,
+    ("POST", "/api/feedback"): ModelRouteHandler._api_feedback,
+    ("POST", "/api/models"): ModelRouteHandler._api_models,
+    ("POST", "/api/settings"): ModelRouteHandler._api_settings,
+    ("POST", "/api/postures"): ModelRouteHandler._api_set_posture,
+    ("POST", "/api/maintenance/prune"): ModelRouteHandler._api_prune,
+    ("POST", "/v1/chat/completions"): ModelRouteHandler._v1_chat,
 }
 
-_PREFIX_ROUTES: dict[tuple[str, str], Callable[[BrainRouteHandler], None]] = {
-    ("GET", "/api/telemetry"): BrainRouteHandler._api_telemetry,
-    ("GET", "/api/sessions/"): BrainRouteHandler._api_session,
+_PREFIX_ROUTES: dict[tuple[str, str], Callable[[ModelRouteHandler], None]] = {
+    ("GET", "/api/telemetry"): ModelRouteHandler._api_telemetry,
+    ("GET", "/api/sessions/"): ModelRouteHandler._api_session,
 }
 
 
@@ -696,15 +696,15 @@ def _public_model(model: dict[str, Any]) -> dict[str, Any]:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="brainroute-server")
+    parser = argparse.ArgumentParser(prog="modelroute-server")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", default=8765, type=int)
     args = parser.parse_args(argv)
 
-    server = ThreadingHTTPServer((args.host, args.port), BrainRouteHandler)
+    server = ThreadingHTTPServer((args.host, args.port), ModelRouteHandler)
     server.daemon_threads = True
-    if args.host not in {"127.0.0.1", "localhost", "::1"} and not os.environ.get("BRAINROUTE_API_KEY"):
-        print("Warning: binding beyond loopback without BRAINROUTE_API_KEY set.")
+    if args.host not in {"127.0.0.1", "localhost", "::1"} and not os.environ.get("MODELROUTE_API_KEY"):
+        print("Warning: binding beyond loopback without MODELROUTE_API_KEY set.")
     print(f"ModelRoute running at http://{args.host}:{args.port}")
     try:
         server.serve_forever()

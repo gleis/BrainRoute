@@ -1,6 +1,6 @@
 import unittest
 
-from brainroute.store import append_message, create_session, get_session, record_run
+from modelroute.store import append_message, create_session, get_session, record_run
 
 
 class StoreTests(unittest.TestCase):
