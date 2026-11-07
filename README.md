@@ -1,6 +1,8 @@
-# BrainRoute — privacy-first LLM router
+# ModelRoute — privacy-first LLM router
 
-BrainRoute picks the right model for each request. It classifies the prompt, applies admission policy, scores every eligible local and cloud model, executes the winner with a fallback chain, records what happened, and feeds that back into the next decision.
+ModelRoute was previously named BrainRoute. Existing installs use the `brainroute` Python package and commands, along with their existing configuration and state paths.
+
+ModelRoute picks the right model for each request. It classifies the prompt, applies admission policy, scores every eligible local and cloud model, executes the winner with a fallback chain, records what happened, and feeds that back into the next decision.
 
 Local by default. Cloud only when a local model genuinely cannot do the job — and it tells you when that happens.
 
@@ -193,7 +195,7 @@ Memory therefore scales with the prompt rather than the model's ceiling — a 5k
 
 ### Any OpenAI-compatible endpoint
 
-The `openai_compatible` provider reaches anything speaking `/v1/chat/completions` — self-hosted vLLM or llama.cpp, LM Studio, a managed inference gateway, a corporate proxy, or another BrainRoute. Adding one is a config change, not new code:
+The `openai_compatible` provider reaches anything speaking `/v1/chat/completions` — self-hosted vLLM or llama.cpp, LM Studio, a managed inference gateway, a corporate proxy, or another ModelRoute. Adding one is a config change, not new code:
 
 ```yaml
   - id: my-frontier-model

@@ -3,7 +3,7 @@ name = "brainroute"
 version = "0.2.0"
 description = "A local-first intelligent model router for choosing the best model per task."
 requires-python = ">=3.11"
-authors = [{ name = "BrainRoute" }]
+authors = [{ name = "ModelRoute" }]
 readme = "README.md"
 license = "Apache-2.0"
 dependencies = []

@@ -2,7 +2,7 @@
 
 The ``/v1/chat/completions`` shape is a de facto standard, so one adapter
 reaches any endpoint that speaks it: self-hosted vLLM, llama.cpp, LM Studio,
-managed inference gateways, corporate proxies, or a second BrainRoute.
+managed inference gateways, corporate proxies, or a second ModelRoute.
 
 Unlike the first-party OpenAI adapter, nothing here is hard-coded to a vendor.
 A model declares where to send the request and which environment variable holds

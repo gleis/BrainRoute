@@ -705,7 +705,7 @@ def main(argv: list[str] | None = None) -> int:
     server.daemon_threads = True
     if args.host not in {"127.0.0.1", "localhost", "::1"} and not os.environ.get("BRAINROUTE_API_KEY"):
         print("Warning: binding beyond loopback without BRAINROUTE_API_KEY set.")
-    print(f"BrainRoute running at http://{args.host}:{args.port}")
+    print(f"ModelRoute running at http://{args.host}:{args.port}")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

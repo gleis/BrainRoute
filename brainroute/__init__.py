@@ -1,4 +1,4 @@
-"""BrainRoute intelligent model router."""
+"""ModelRoute intelligent model router."""
 
 __all__ = ["__version__"]
 
